@@ -23,18 +23,43 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class AuthController {
 
+    @Autowired
+    private UserService userService;
+
+    @Autowired
+    private JwtProvider jwtProvider;
+
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody @Valid RegistrationRequest registrationRequest){
-        return null;
+        try {
+            User user = User.builder().email(registrationRequest.getEmail()).password(registrationRequest.getPassword()).build();
+            userService.saveUser(user);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @PostMapping("/auth")
     public ResponseEntity<AuthResponse> auth(@RequestBody @Valid AuthRequest authRequest) {
-        return null;
+        try {
+            User user = userService.findByEmailAndPassword(authRequest.getEmail(), authRequest.getPassword());
+            String token = jwtProvider.generateToken(user.getEmail());
+            AuthResponse response = AuthResponse.builder().token(token).build();
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @GetMapping("/me")
     public ResponseEntity<User> getUser() {
-        return null;
+        try {
+            UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            User user = userService.findByEmail(userDetails.getUsername());
+            return ResponseEntity.ok(user);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
     }
 }
