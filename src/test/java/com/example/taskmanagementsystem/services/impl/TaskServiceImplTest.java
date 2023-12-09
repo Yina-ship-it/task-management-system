@@ -7,6 +7,7 @@ import com.example.taskmanagementsystem.models.TaskPriority;
 import com.example.taskmanagementsystem.models.TaskStatus;
 import com.example.taskmanagementsystem.models.User;
 import com.example.taskmanagementsystem.repositories.TaskRepository;
+import com.example.taskmanagementsystem.services.UserService;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,9 +15,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -33,6 +32,9 @@ class TaskServiceImplTest {
 
     @Mock
     TaskDtoConverter taskDtoConverter;
+
+    @Mock
+    UserService userService;
 
     @InjectMocks
     TaskServiceImpl taskService;
@@ -175,5 +177,158 @@ class TaskServiceImplTest {
         );
 
         verify(taskRepository, times(1)).findById(id);
+    }
+
+    @Test
+    void createTask_WhenTaskDTOWithValidData_ShouldCreateTaskAndReturnTaskDto() {
+        // Arrange
+        User user1 = User.builder().id(1L).name("maksim1").email("maksim1@mail.test").password("****").build();
+        User user2 = User.builder().id(2L).name("maksim2").email("maksim2@mail.test").password("****").build();
+        User user3 = User.builder().id(3L).name("maksim2").email("maksim3@mail.test").password("****").build();
+
+        Task task = Task.builder()
+                .id(1L)
+                .title("TestTask")
+                .description("task")
+                .priority(TaskPriority.MEDIUM)
+                .status(TaskStatus.IN_PROGRESS)
+                .author(user1)
+                .assignees(Set.of(user2, user3))
+                .build();
+
+        TaskDto taskDto = TaskDto.builder()
+                .title("TestTask")
+                .description("task")
+                .priority(TaskPriority.MEDIUM)
+                .status(TaskStatus.IN_PROGRESS)
+                .author(user1)
+                .assignees(List.of(
+                        User.builder().id(user2.getId()).build(),
+                        User.builder().email(user3.getEmail()).build())
+                )
+                .build();
+
+        TaskDto resultTaskDto = TaskDto.builder()
+                .title("TestTask")
+                .description("task")
+                .priority(TaskPriority.MEDIUM)
+                .status(TaskStatus.IN_PROGRESS)
+                .author(user1)
+                .assignees(List.of(user2,user3)
+                )
+                .build();
+
+        when(userService.findById(user2.getId())).thenReturn(user2);
+        when(userService.findByEmail(user3.getEmail())).thenReturn(user3);
+        when(taskDtoConverter.convertDtoToEntity(taskDto)).thenReturn(task);
+        when(taskRepository.save(task)).thenReturn(task);
+        when(taskDtoConverter.convertEntityToDto(task)).thenReturn(resultTaskDto);
+        //Assert
+        TaskDto result = taskService.createTaskDto(taskDto);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(resultTaskDto, result);
+
+        verify(taskDtoConverter, times(1)).convertDtoToEntity(any(TaskDto.class));
+        verify(taskRepository, times(1)).save(any(Task.class));
+        verify(taskDtoConverter, times(1)).convertEntityToDto(any(Task.class));
+    }
+
+    @Test
+    void createTask_WhenTaskDTOWithoutTitle_ShouldThrowException() {
+        // Arrange
+        User user1 = User.builder().id(1L).name("maksim1").email("maksim1@mail.test").password("****").build();
+        User user2 = User.builder().id(2L).name("maksim2").email("maksim2@mail.test").password("****").build();
+        User user3 = User.builder().id(3L).name("maksim2").email("maksim3@mail.test").password("****").build();
+
+        TaskDto taskDto = TaskDto.builder()
+                .description("task")
+                .priority(TaskPriority.MEDIUM)
+                .status(TaskStatus.IN_PROGRESS)
+                .author(user1)
+                .assignees(List.of(
+                        User.builder().id(user2.getId()).build(),
+                        User.builder().email(user3.getEmail()).build())
+                )
+                .build();
+
+        // Act && Assert
+        assertThrows(IllegalArgumentException.class,
+                () -> taskService.createTaskDto(taskDto)
+        );
+    }
+
+    @Test
+    void createTask_WhenTaskDTOWithEmptySetAssignees_ShouldCreateTaskWithoutAssigneesAndReturnTaskDto() {
+        // Arrange
+        User user1 = User.builder().id(1L).name("maksim1").email("maksim1@mail.test").password("****").build();
+
+        Task task = Task.builder()
+                .id(1L)
+                .title("TestTask")
+                .description("task")
+                .priority(TaskPriority.MEDIUM)
+                .status(TaskStatus.IN_PROGRESS)
+                .author(user1)
+                .assignees(new HashSet<>())
+                .build();
+
+        TaskDto taskDto = TaskDto.builder()
+                .title("TestTask")
+                .description("task")
+                .priority(TaskPriority.MEDIUM)
+                .status(TaskStatus.IN_PROGRESS)
+                .assignees(List.of())
+                .author(user1)
+                .build();
+
+        TaskDto resultTaskDto = TaskDto.builder()
+                .title("TestTask")
+                .description("task")
+                .priority(TaskPriority.MEDIUM)
+                .status(TaskStatus.IN_PROGRESS)
+                .author(user1)
+                .assignees(List.of())
+                .build();
+
+        when(taskDtoConverter.convertDtoToEntity(taskDto)).thenReturn(task);
+        when(taskRepository.save(task)).thenReturn(task);
+        when(taskDtoConverter.convertEntityToDto(task)).thenReturn(resultTaskDto);
+
+        //Assert
+        TaskDto result = taskService.createTaskDto(taskDto);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(resultTaskDto, result);
+        assertEquals(0, result.getAssignees().size());
+
+        verify(taskDtoConverter, times(1)).convertDtoToEntity(any(TaskDto.class));
+        verify(taskRepository, times(1)).save(any(Task.class));
+        verify(taskDtoConverter, times(1)).convertEntityToDto(any(Task.class));
+    }
+
+    @Test
+    void createTask_WhenTaskDTOWithEmptyAssignee_ShouldThrowException() {
+        // Arrange
+        User user1 = User.builder().id(1L).name("maksim1").email("maksim1@mail.test").password("****").build();
+        User user3 = User.builder().id(3L).name("maksim2").email("maksim3@mail.test").password("****").build();
+
+        TaskDto taskDto = TaskDto.builder()
+                .description("task")
+                .priority(TaskPriority.MEDIUM)
+                .status(TaskStatus.IN_PROGRESS)
+                .author(user1)
+                .assignees(List.of(
+                        User.builder().build(),
+                        User.builder().email(user3.getEmail()).build())
+                )
+                .build();
+
+        // Act && Assert
+        assertThrows(IllegalArgumentException.class,
+                () -> taskService.createTaskDto(taskDto)
+        );
     }
 }
