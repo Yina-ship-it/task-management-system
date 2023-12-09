@@ -8,6 +8,7 @@ import com.example.taskmanagementsystem.models.User;
  */
 public interface UserService {
     User findByEmail(String email);
+    User findById(Long id);
     User findByEmailAndPassword(String email, String password);
-    User saveUser(User user);
+    void saveUser(User user);
 }
