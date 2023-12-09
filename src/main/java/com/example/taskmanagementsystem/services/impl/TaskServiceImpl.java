@@ -49,29 +49,61 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public TaskDto createTaskDto(TaskDto taskDto) {
-        if (taskDto.getTitle() == null)
-            throw new IllegalArgumentException("Invalid title=null");
-        Set<User> assignees = taskDto.getAssignees().stream()
-                .map(assignee -> {
-                    if(assignee.getId() != null)
-                        return userService.findById(assignee.getId());
-                    if(assignee.getEmail() != null)
-                        return  userService.findByEmail(assignee.getEmail());
-                    throw new IllegalArgumentException("Task contains an invalid assignee! The assignee must have at least an id or email.");
-                })
-                .collect(Collectors.toSet());
+        validateTaskDto(taskDto);
+
+        Set<User> assignees = getAssigneesFromDto(taskDto);
+
         Task task = taskDtoConverter.convertDtoToEntity(taskDto);
         task.setAssignees(assignees);
+
         return taskDtoConverter.convertEntityToDto(taskRepository.save(task));
     }
 
     @Override
     public TaskDto updateTaskDto(TaskDto updatedTaskDto) {
-        return null;
+        Task oldTask = taskRepository.findById(updatedTaskDto.getId())
+                .orElseThrow(() -> new EntityNotFoundException("Task with id=" + updatedTaskDto.getId() + " not found!"));
+
+        validateTaskDto(updatedTaskDto);
+        validateAuthor(oldTask, updatedTaskDto);
+
+        Set<User> assignees = getAssigneesFromDto(updatedTaskDto);
+
+        oldTask = taskDtoConverter.convertDtoToEntity(updatedTaskDto);
+        oldTask.setAssignees(assignees);
+
+        return taskDtoConverter.convertEntityToDto(taskRepository.save(oldTask));
     }
 
     @Override
     public void deleteTaskDtoById(Long id) {
 
+    }
+
+
+    private void validateTaskDto(TaskDto taskDto) {
+        if (taskDto.getTitle() == null) {
+            throw new IllegalArgumentException("Invalid title=null");
+        }
+    }
+
+    private void validateAuthor(Task oldTask, TaskDto updatedTaskDto) {
+        if (!oldTask.getAuthor().equals(updatedTaskDto.getAuthor())) {
+            throw new IllegalArgumentException("Only the author can update the task");
+        }
+    }
+
+    private Set<User> getAssigneesFromDto(TaskDto taskDto) {
+        return taskDto.getAssignees().stream()
+                .map(assignee -> {
+                    if (assignee.getId() != null) {
+                        return userService.findById(assignee.getId());
+                    }
+                    if (assignee.getEmail() != null) {
+                        return userService.findByEmail(assignee.getEmail());
+                    }
+                    throw new IllegalArgumentException("Task contains an invalid assignee! The assignee must have at least an id or email.");
+                })
+                .collect(Collectors.toSet());
     }
 }

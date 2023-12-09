@@ -316,6 +316,7 @@ class TaskServiceImplTest {
         User user3 = User.builder().id(3L).name("maksim2").email("maksim3@mail.test").password("****").build();
 
         TaskDto taskDto = TaskDto.builder()
+                .title("NewTestTask")
                 .description("task")
                 .priority(TaskPriority.MEDIUM)
                 .status(TaskStatus.IN_PROGRESS)
@@ -325,6 +326,288 @@ class TaskServiceImplTest {
                         User.builder().email(user3.getEmail()).build())
                 )
                 .build();
+
+        // Act && Assert
+        assertThrows(IllegalArgumentException.class,
+                () -> taskService.createTaskDto(taskDto)
+        );
+    }
+
+    @Test
+    void updateTask_WhenTaskDTOWithValidData_ShouldUpdateTaskAndReturnTaskDto() {
+        // Arrange
+        User user1 = User.builder().id(1L).name("maksim1").email("maksim1@mail.test").password("****").build();
+        User user2 = User.builder().id(2L).name("maksim2").email("maksim2@mail.test").password("****").build();
+        User user3 = User.builder().id(3L).name("maksim2").email("maksim3@mail.test").password("****").build();
+
+        long id = 1L;
+
+        Task task = Task.builder()
+                .id(id)
+                .title("NewTestTask")
+                .description("new task")
+                .priority(TaskPriority.MEDIUM)
+                .status(TaskStatus.IN_PROGRESS)
+                .author(user1)
+                .assignees(Set.of(user2, user3))
+                .build();
+
+        Task oldTask = Task.builder()
+                .id(id)
+                .title("TestTask")
+                .description("task")
+                .priority(TaskPriority.LOW)
+                .status(TaskStatus.PENDING)
+                .author(user1)
+                .assignees(Set.of(user3))
+                .build();
+
+        TaskDto taskDto = TaskDto.builder()
+                .id(id)
+                .title("NewTestTask")
+                .description("new task")
+                .priority(TaskPriority.MEDIUM)
+                .status(TaskStatus.IN_PROGRESS)
+                .author(user1)
+                .assignees(List.of(
+                        User.builder().id(user2.getId()).build(),
+                        User.builder().email(user3.getEmail()).build())
+                )
+                .build();
+
+        TaskDto resultTaskDto = TaskDto.builder()
+                .id(id)
+                .title("NewTestTask")
+                .description("new task")
+                .priority(TaskPriority.MEDIUM)
+                .status(TaskStatus.IN_PROGRESS)
+                .author(user1)
+                .assignees(List.of(user2, user3))
+                .build();
+
+        when(taskRepository.findById(taskDto.getId())).thenReturn(Optional.of(oldTask));
+        when(userService.findById(user2.getId())).thenReturn(user2);
+        when(userService.findByEmail(user3.getEmail())).thenReturn(user3);
+        when(taskDtoConverter.convertDtoToEntity(taskDto)).thenReturn(task);
+        when(taskRepository.save(task)).thenReturn(task);
+        when(taskDtoConverter.convertEntityToDto(task)).thenReturn(resultTaskDto);
+        //Assert
+        TaskDto result = taskService.updateTaskDto(taskDto);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(resultTaskDto, result);
+
+        verify(taskRepository, times(1)).findById(id);
+        verify(taskDtoConverter, times(1)).convertDtoToEntity(any(TaskDto.class));
+        verify(taskRepository, times(1)).save(any(Task.class));
+        verify(taskDtoConverter, times(1)).convertEntityToDto(any(Task.class));
+    }
+
+    @Test
+    void updateTask_WhenTaskDTOWithoutTitle_ShouldThrowException() {
+        // Arrange
+        User user1 = User.builder().id(1L).name("maksim1").email("maksim1@mail.test").password("****").build();
+        User user2 = User.builder().id(2L).name("maksim2").email("maksim2@mail.test").password("****").build();
+        User user3 = User.builder().id(3L).name("maksim2").email("maksim3@mail.test").password("****").build();
+
+        long id = 1L;
+
+        Task oldTask = Task.builder()
+                .id(id)
+                .title("TestTask")
+                .description("task")
+                .priority(TaskPriority.LOW)
+                .status(TaskStatus.PENDING)
+                .author(user1)
+                .assignees(Set.of(user3))
+                .build();
+
+        TaskDto taskDto = TaskDto.builder()
+                .id(id)
+                .description("new task")
+                .priority(TaskPriority.MEDIUM)
+                .status(TaskStatus.IN_PROGRESS)
+                .author(user1)
+                .assignees(List.of(
+                        User.builder().id(user2.getId()).build(),
+                        User.builder().email(user3.getEmail()).build())
+                )
+                .build();
+
+        when(taskRepository.findById(taskDto.getId())).thenReturn(Optional.of(oldTask));
+
+        // Act && Assert
+        assertThrows(IllegalArgumentException.class,
+                () -> taskService.updateTaskDto(taskDto)
+        );
+    }
+
+    @Test
+    void updateTask_WhenOldTaskNotFound_ShouldThrowException() {
+        // Arrange
+        User user1 = User.builder().id(1L).name("maksim1").email("maksim1@mail.test").password("****").build();
+        User user2 = User.builder().id(2L).name("maksim2").email("maksim2@mail.test").password("****").build();
+        User user3 = User.builder().id(3L).name("maksim2").email("maksim3@mail.test").password("****").build();
+
+        TaskDto taskDto = TaskDto.builder()
+                .id(1L)
+                .title("NewTestTask")
+                .description("new task")
+                .priority(TaskPriority.MEDIUM)
+                .status(TaskStatus.IN_PROGRESS)
+                .author(user1)
+                .assignees(List.of(
+                        User.builder().id(user2.getId()).build(),
+                        User.builder().email(user3.getEmail()).build())
+                )
+                .build();
+
+        when(taskRepository.findById(taskDto.getId())).thenReturn(Optional.empty());
+
+        // Act && Assert
+        assertThrows(EntityNotFoundException.class,
+                () -> taskService.findTaskById(taskDto.getId())
+        );
+    }
+
+    @Test
+    void updateTask_WhenTaskDTOAnotherAuthor_ShouldThrowException() {
+        // Arrange
+        User user1 = User.builder().id(1L).name("maksim1").email("maksim1@mail.test").password("****").build();
+        User user2 = User.builder().id(2L).name("maksim2").email("maksim2@mail.test").password("****").build();
+        User user3 = User.builder().id(3L).name("maksim2").email("maksim3@mail.test").password("****").build();
+
+        long id = 1L;
+
+        Task oldTask = Task.builder()
+                .id(id)
+                .title("TestTask")
+                .description("task")
+                .priority(TaskPriority.LOW)
+                .status(TaskStatus.PENDING)
+                .author(user2)
+                .assignees(Set.of(user3))
+                .build();
+
+        TaskDto taskDto = TaskDto.builder()
+                .id(id)
+                .title("NewTestTask")
+                .description("new task")
+                .priority(TaskPriority.MEDIUM)
+                .status(TaskStatus.IN_PROGRESS)
+                .author(user1)
+                .assignees(List.of(
+                        User.builder().id(user2.getId()).build(),
+                        User.builder().email(user3.getEmail()).build())
+                )
+                .build();
+
+        when(taskRepository.findById(taskDto.getId())).thenReturn(Optional.of(oldTask));
+
+        // Act && Assert
+        assertThrows(IllegalArgumentException.class,
+                () -> taskService.updateTaskDto(taskDto)
+        );
+    }
+
+    @Test
+    void updateTask_WhenTaskDTOWithEmptySetAssignees_ShouldUpdateTaskWithoutAssigneesAndReturnTaskDto() {
+        // Arrange
+        User user1 = User.builder().id(1L).name("maksim1").email("maksim1@mail.test").password("****").build();
+
+        long id = 1L;
+
+        Task task = Task.builder()
+                .id(id)
+                .title("NewTestTask")
+                .description("new task")
+                .priority(TaskPriority.MEDIUM)
+                .status(TaskStatus.IN_PROGRESS)
+                .author(user1)
+                .assignees(new HashSet<>())
+                .build();
+
+        Task oldTask = Task.builder()
+                .id(id)
+                .title("TestTask")
+                .description("task")
+                .priority(TaskPriority.LOW)
+                .status(TaskStatus.PENDING)
+                .author(user1)
+                .assignees(Set.of(user1))
+                .build();
+
+        TaskDto taskDto = TaskDto.builder()
+                .id(id)
+                .title("NewTestTask")
+                .description("new task")
+                .priority(TaskPriority.MEDIUM)
+                .status(TaskStatus.IN_PROGRESS)
+                .author(user1)
+                .assignees(List.of())
+                .build();
+
+        TaskDto resultTaskDto = TaskDto.builder()
+                .id(id)
+                .title("NewTestTask")
+                .description("new task")
+                .priority(TaskPriority.MEDIUM)
+                .status(TaskStatus.IN_PROGRESS)
+                .author(user1)
+                .assignees(List.of())
+                .build();
+
+        when(taskRepository.findById(taskDto.getId())).thenReturn(Optional.of(oldTask));
+        when(taskDtoConverter.convertDtoToEntity(taskDto)).thenReturn(task);
+        when(taskRepository.save(task)).thenReturn(task);
+        when(taskDtoConverter.convertEntityToDto(task)).thenReturn(resultTaskDto);
+
+        //Assert
+        TaskDto result = taskService.updateTaskDto(taskDto);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(resultTaskDto, result);
+        assertEquals(0, result.getAssignees().size());
+
+        verify(taskRepository, times(1)).findById(id);
+        verify(taskDtoConverter, times(1)).convertDtoToEntity(any(TaskDto.class));
+        verify(taskRepository, times(1)).save(any(Task.class));
+        verify(taskDtoConverter, times(1)).convertEntityToDto(any(Task.class));
+    }
+
+    @Test
+    void updateTask_WhenTaskDTOWithEmptyAssignee_ShouldThrowException() {
+        // Arrange
+        User user1 = User.builder().id(1L).name("maksim1").email("maksim1@mail.test").password("****").build();
+        User user3 = User.builder().id(3L).name("maksim2").email("maksim3@mail.test").password("****").build();
+
+        long id = 1L;
+
+        Task oldTask = Task.builder()
+                .id(id)
+                .title("TestTask")
+                .description("task")
+                .priority(TaskPriority.LOW)
+                .status(TaskStatus.PENDING)
+                .author(user1)
+                .assignees(Set.of(user3))
+                .build();
+
+        TaskDto taskDto = TaskDto.builder()
+                .id(id)
+                .title("TestTask")
+                .description("new task")
+                .priority(TaskPriority.MEDIUM)
+                .status(TaskStatus.IN_PROGRESS)
+                .author(user1)
+                .assignees(List.of(
+                        User.builder().build(),
+                        User.builder().email(user3.getEmail()).build())
+                )
+                .build();
+        lenient().when(taskRepository.findById(taskDto.getId())).thenReturn(Optional.of(oldTask));
 
         // Act && Assert
         assertThrows(IllegalArgumentException.class,
