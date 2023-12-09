@@ -11,7 +11,7 @@ import java.util.List;
 public interface TaskService {
     List<TaskDto> findAllTasks();
     TaskDto findTaskById(Long id);
-    TaskDto createTaskDto(TaskDto taskDto);
-    TaskDto updateTaskDto(TaskDto updatedTaskDto);
+    TaskDto createTask(TaskDto taskDto);
+    TaskDto updateTask(TaskDto updatedTaskDto);
     void deleteTaskDtoById(Long id);
 }

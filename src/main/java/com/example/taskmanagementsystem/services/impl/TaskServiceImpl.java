@@ -48,7 +48,7 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public TaskDto createTaskDto(TaskDto taskDto) {
+    public TaskDto createTask(TaskDto taskDto) {
         validateTaskDto(taskDto);
 
         Set<User> assignees = getAssigneesFromDto(taskDto);
@@ -60,7 +60,7 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public TaskDto updateTaskDto(TaskDto updatedTaskDto) {
+    public TaskDto updateTask(TaskDto updatedTaskDto) {
         Task oldTask = taskRepository.findById(updatedTaskDto.getId())
                 .orElseThrow(() -> new EntityNotFoundException("Task with id=" + updatedTaskDto.getId() + " not found!"));
 

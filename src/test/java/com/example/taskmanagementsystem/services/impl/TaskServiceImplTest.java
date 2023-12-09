@@ -224,7 +224,7 @@ class TaskServiceImplTest {
         when(taskRepository.save(task)).thenReturn(task);
         when(taskDtoConverter.convertEntityToDto(task)).thenReturn(resultTaskDto);
         //Assert
-        TaskDto result = taskService.createTaskDto(taskDto);
+        TaskDto result = taskService.createTask(taskDto);
 
         // Assert
         assertNotNull(result);
@@ -255,7 +255,7 @@ class TaskServiceImplTest {
 
         // Act && Assert
         assertThrows(IllegalArgumentException.class,
-                () -> taskService.createTaskDto(taskDto)
+                () -> taskService.createTask(taskDto)
         );
     }
 
@@ -297,7 +297,7 @@ class TaskServiceImplTest {
         when(taskDtoConverter.convertEntityToDto(task)).thenReturn(resultTaskDto);
 
         //Assert
-        TaskDto result = taskService.createTaskDto(taskDto);
+        TaskDto result = taskService.createTask(taskDto);
 
         // Assert
         assertNotNull(result);
@@ -329,7 +329,7 @@ class TaskServiceImplTest {
 
         // Act && Assert
         assertThrows(IllegalArgumentException.class,
-                () -> taskService.createTaskDto(taskDto)
+                () -> taskService.createTask(taskDto)
         );
     }
 
@@ -392,7 +392,7 @@ class TaskServiceImplTest {
         when(taskRepository.save(task)).thenReturn(task);
         when(taskDtoConverter.convertEntityToDto(task)).thenReturn(resultTaskDto);
         //Assert
-        TaskDto result = taskService.updateTaskDto(taskDto);
+        TaskDto result = taskService.updateTask(taskDto);
 
         // Assert
         assertNotNull(result);
@@ -439,7 +439,7 @@ class TaskServiceImplTest {
 
         // Act && Assert
         assertThrows(IllegalArgumentException.class,
-                () -> taskService.updateTaskDto(taskDto)
+                () -> taskService.updateTask(taskDto)
         );
     }
 
@@ -507,7 +507,7 @@ class TaskServiceImplTest {
 
         // Act && Assert
         assertThrows(IllegalArgumentException.class,
-                () -> taskService.updateTaskDto(taskDto)
+                () -> taskService.updateTask(taskDto)
         );
     }
 
@@ -564,7 +564,7 @@ class TaskServiceImplTest {
         when(taskDtoConverter.convertEntityToDto(task)).thenReturn(resultTaskDto);
 
         //Assert
-        TaskDto result = taskService.updateTaskDto(taskDto);
+        TaskDto result = taskService.updateTask(taskDto);
 
         // Assert
         assertNotNull(result);
@@ -611,7 +611,7 @@ class TaskServiceImplTest {
 
         // Act && Assert
         assertThrows(IllegalArgumentException.class,
-                () -> taskService.createTaskDto(taskDto)
+                () -> taskService.createTask(taskDto)
         );
     }
 }
