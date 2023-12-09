@@ -5,10 +5,12 @@ import com.example.taskmanagementsystem.dto.task.TaskDtoConverter;
 import com.example.taskmanagementsystem.models.Task;
 import com.example.taskmanagementsystem.repositories.TaskRepository;
 import com.example.taskmanagementsystem.services.TaskService;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * @author Yina-ship-it
@@ -31,7 +33,9 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public TaskDto findTaskById(Long id) {
-        return null;
+        Task task = taskRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("task with id=" + id + " not found!"));
+        return taskDtoConverter.convertEntityToDto(task);
     }
 
     @Override
