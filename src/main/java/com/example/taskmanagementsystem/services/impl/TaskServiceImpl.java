@@ -76,7 +76,7 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public void deleteTaskDtoById(Long id) {
+    public void deleteTaskById(Long id) {
 
     }
 
