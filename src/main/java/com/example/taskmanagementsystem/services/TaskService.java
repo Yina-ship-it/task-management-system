@@ -1,6 +1,7 @@
 package com.example.taskmanagementsystem.services;
 
 import com.example.taskmanagementsystem.dto.task.TaskDto;
+import com.example.taskmanagementsystem.models.User;
 
 import java.util.List;
 
@@ -13,5 +14,5 @@ public interface TaskService {
     TaskDto findTaskById(Long id);
     TaskDto createTask(TaskDto taskDto);
     TaskDto updateTask(TaskDto updatedTaskDto);
-    void deleteTaskById(Long id);
+    void deleteTaskById(Long id, User user);
 }

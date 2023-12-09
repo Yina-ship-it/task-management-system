@@ -10,6 +10,8 @@ import com.example.taskmanagementsystem.services.UserService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -65,7 +67,7 @@ public class TaskServiceImpl implements TaskService {
                 .orElseThrow(() -> new EntityNotFoundException("Task with id=" + updatedTaskDto.getId() + " not found!"));
 
         validateTaskDto(updatedTaskDto);
-        validateAuthor(oldTask, updatedTaskDto);
+        validateAuthor(oldTask, updatedTaskDto.getAuthor());
 
         Set<User> assignees = getAssigneesFromDto(updatedTaskDto);
 
@@ -76,8 +78,12 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public void deleteTaskById(Long id) {
+    public void deleteTaskById(Long id, User user) {
+        Task task = taskRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Task with id=" + id + " not found!"));
+        validateAuthor(task, user);
 
+        taskRepository.delete(task);
     }
 
 
@@ -87,8 +93,8 @@ public class TaskServiceImpl implements TaskService {
         }
     }
 
-    private void validateAuthor(Task oldTask, TaskDto updatedTaskDto) {
-        if (!oldTask.getAuthor().equals(updatedTaskDto.getAuthor())) {
+    private void validateAuthor(Task oldTask, User user) {
+        if (!oldTask.getAuthor().equals(user)) {
             throw new IllegalArgumentException("Only the author can update the task");
         }
     }

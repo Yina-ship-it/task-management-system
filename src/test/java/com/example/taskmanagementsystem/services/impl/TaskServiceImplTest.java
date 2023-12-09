@@ -165,7 +165,7 @@ class TaskServiceImplTest {
     }
 
     @Test
-    void findTaskById_WhenTaskNonExist_ShouldReturnTaskDto() {
+    void findTaskById_WhenTaskNonExist_ShouldThrowException() {
         // Arrange
         long id = 1L;
 
@@ -613,5 +613,81 @@ class TaskServiceImplTest {
         assertThrows(IllegalArgumentException.class,
                 () -> taskService.createTask(taskDto)
         );
+    }
+
+    @Test
+    void deleteTaskById_WhenTaskExist_ShouldReturnTaskDto() {
+        // Arrange
+        User user1 = User.builder().id(1L).name("maksim1").email("maksim1@mail.test").password("****").build();
+        User user2 = User.builder().id(2L).name("maksim2").email("maksim2@mail.test").password("****").build();
+        User user3 = User.builder().id(3L).name("maksim2").email("maksim3@mail.test").password("****").build();
+
+        long id = 1L;
+
+        Task task = Task.builder()
+                .id(id)
+                .title("TestTask")
+                .description("task")
+                .priority(TaskPriority.MEDIUM)
+                .status(TaskStatus.IN_PROGRESS)
+                .author(user1)
+                .assignees(Set.of(user2, user3))
+                .build();
+
+        when(taskRepository.findById(id)).thenReturn(Optional.of(task));
+
+        // Act
+        taskService.deleteTaskById(id, user1);
+
+        // Assert
+
+        verify(taskRepository, times(1)).findById(id);
+        verify(taskRepository, times(1)).delete(any(Task.class));
+    }
+
+    @Test
+    void deleteTaskById_WhenTaskNonExist_ShouldThrowException() {
+        // Arrange
+        User user1 = User.builder().id(1L).name("maksim1").email("maksim1@mail.test").password("****").build();
+
+        long id = 1L;
+
+        when(taskRepository.findById(id)).thenReturn(Optional.empty());
+
+        // Act && Assert
+        assertThrows(EntityNotFoundException.class,
+                () -> taskService.deleteTaskById(id, user1)
+        );
+
+        verify(taskRepository, times(1)).findById(id);
+    }
+
+    @Test
+    void deleteTaskById_WhenAnotherAuthor_ShouldThrowException() {
+        // Arrange
+        User user1 = User.builder().id(1L).name("maksim1").email("maksim1@mail.test").password("****").build();
+        User user2 = User.builder().id(2L).name("maksim2").email("maksim2@mail.test").password("****").build();
+        User user3 = User.builder().id(3L).name("maksim2").email("maksim3@mail.test").password("****").build();
+
+        long id = 1L;
+
+        Task task = Task.builder()
+                .id(id)
+                .title("TestTask")
+                .description("task")
+                .priority(TaskPriority.MEDIUM)
+                .status(TaskStatus.IN_PROGRESS)
+                .author(user2)
+                .assignees(Set.of(user2, user3))
+                .build();
+
+        when(taskRepository.findById(id)).thenReturn(Optional.of(task));
+
+        // Act && Assert
+        assertThrows(IllegalArgumentException.class,
+                () -> taskService.deleteTaskById(id,user1)
+        );
+
+        verify(taskRepository, times(1)).findById(id);
     }
 }
