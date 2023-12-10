@@ -41,7 +41,7 @@ public class TaskDtoConverter implements DtoConverter<Task, TaskDto, TaskRequest
                 .priority(taskDto.getPriority())
                 .status(taskDto.getStatus())
                 .author(taskDto.getAuthor())
-                .assignees(new HashSet<>(taskDto.getAssignees()))
+                .assignees(taskDto.getAssignees())
                 .build();
     }
 

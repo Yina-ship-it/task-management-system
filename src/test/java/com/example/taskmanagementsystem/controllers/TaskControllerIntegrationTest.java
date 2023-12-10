@@ -23,6 +23,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -93,7 +94,7 @@ class TaskControllerIntegrationTest {
                         .priority(TaskPriority.MEDIUM)
                         .status(TaskStatus.IN_PROGRESS)
                         .author(users.get(0))
-                        .assignees(Set.of(users.get(1), users.get(2)))
+                        .assignees(new ArrayList<>(List.of(users.get(1), users.get(2))))
                         .build(),
                 Task.builder()
                         .title("TestTask2")
@@ -101,7 +102,7 @@ class TaskControllerIntegrationTest {
                         .priority(TaskPriority.LOW)
                         .status(TaskStatus.COMPLETED)
                         .author(users.get(1))
-                        .assignees(Set.of(users.get(0), users.get(2)))
+                        .assignees(new ArrayList<>(List.of(users.get(0), users.get(2))))
                         .build()
         ));
     }

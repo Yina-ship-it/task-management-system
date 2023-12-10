@@ -2,7 +2,6 @@ package com.example.taskmanagementsystem.controllers;
 
 import com.example.taskmanagementsystem.dto.profile.UserResponse;
 import com.example.taskmanagementsystem.dto.task.TaskDtoConverter;
-import com.example.taskmanagementsystem.dto.task.TaskRequest;
 import com.example.taskmanagementsystem.dto.task.TaskResponse;
 import com.example.taskmanagementsystem.models.Task;
 import com.example.taskmanagementsystem.models.TaskPriority;
@@ -24,13 +23,11 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -93,7 +90,7 @@ class TaskFieldControllerIntegrationTest {
                         .priority(TaskPriority.MEDIUM)
                         .status(TaskStatus.IN_PROGRESS)
                         .author(users.get(0))
-                        .assignees(Set.of(users.get(1), users.get(2)))
+                        .assignees(new ArrayList<>(List.of(users.get(1), users.get(2))))
                         .build(),
                 Task.builder()
                         .title("TestTask2")
@@ -101,7 +98,7 @@ class TaskFieldControllerIntegrationTest {
                         .priority(TaskPriority.LOW)
                         .status(TaskStatus.COMPLETED)
                         .author(users.get(1))
-                        .assignees(Set.of(users.get(0), users.get(2)))
+                        .assignees(new ArrayList<>(List.of(users.get(0), users.get(2))))
                         .build()
         ));
     }

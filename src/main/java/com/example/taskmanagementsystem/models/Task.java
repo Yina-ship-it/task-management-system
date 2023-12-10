@@ -6,7 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Yina-ship-it
@@ -44,5 +45,5 @@ public class Task {
             name = "task_assignees",
             joinColumns = @JoinColumn(name = "task_id"),
             inverseJoinColumns = @JoinColumn(name = "assignee_id"))
-    private Set<User> assignees;
+    private List<User> assignees = new ArrayList<>();
 }

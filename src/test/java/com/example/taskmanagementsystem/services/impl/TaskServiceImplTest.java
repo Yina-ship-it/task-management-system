@@ -53,7 +53,7 @@ class TaskServiceImplTest {
                 .priority(TaskPriority.MEDIUM)
                 .status(TaskStatus.IN_PROGRESS)
                 .author(user1)
-                .assignees(Set.of(user2, user3))
+                .assignees(new ArrayList<>(List.of(user2, user3)))
                 .build();
 
         Task task2 = Task.builder()
@@ -63,7 +63,7 @@ class TaskServiceImplTest {
                 .priority(TaskPriority.LOW)
                 .status(TaskStatus.COMPLETED)
                 .author(user2)
-                .assignees(Set.of(user1, user3))
+                .assignees(new ArrayList<>(List.of(user1, user3)))
                 .build();
 
         List<Task> tasks = List.of(task1, task2);
@@ -137,7 +137,7 @@ class TaskServiceImplTest {
                 .priority(TaskPriority.MEDIUM)
                 .status(TaskStatus.IN_PROGRESS)
                 .author(user1)
-                .assignees(Set.of(user2, user3))
+                .assignees(new ArrayList<>(List.of(user2, user3)))
                 .build();
 
         TaskDto taskDto = TaskDto.builder()
@@ -193,7 +193,7 @@ class TaskServiceImplTest {
                 .priority(TaskPriority.MEDIUM)
                 .status(TaskStatus.IN_PROGRESS)
                 .author(user1)
-                .assignees(Set.of(user2, user3))
+                .assignees(new ArrayList<>(List.of(user2, user3)))
                 .build();
 
         TaskDto taskDto = TaskDto.builder()
@@ -271,7 +271,7 @@ class TaskServiceImplTest {
                 .priority(TaskPriority.MEDIUM)
                 .status(TaskStatus.IN_PROGRESS)
                 .author(user1)
-                .assignees(new HashSet<>())
+                .assignees(new ArrayList<>())
                 .build();
 
         TaskDto taskDto = TaskDto.builder()
@@ -349,7 +349,7 @@ class TaskServiceImplTest {
                 .priority(TaskPriority.MEDIUM)
                 .status(TaskStatus.IN_PROGRESS)
                 .author(user1)
-                .assignees(Set.of(user2, user3))
+                .assignees(new ArrayList<>(List.of(user2, user3)))
                 .build();
 
         when(taskRepository.findById(id)).thenReturn(Optional.of(task));
@@ -396,7 +396,7 @@ class TaskServiceImplTest {
                 .priority(TaskPriority.MEDIUM)
                 .status(TaskStatus.IN_PROGRESS)
                 .author(user2)
-                .assignees(Set.of(user2, user3))
+                .assignees(new ArrayList<>(List.of(user2, user3)))
                 .build();
 
         when(taskRepository.findById(id)).thenReturn(Optional.of(task));
