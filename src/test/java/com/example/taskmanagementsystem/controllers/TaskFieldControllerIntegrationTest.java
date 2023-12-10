@@ -65,12 +65,14 @@ class TaskFieldControllerIntegrationTest {
     private String token;
     private List<User> users;
     private List<Task> tasks;
+    private TaskResponse taskResponse;
 
     @BeforeEach
     void setUp() {
         this.users = createUsers();
         this.token = jwtProvider.generateToken(users.get(0).getEmail());
         this.tasks = createTasks();
+        this.taskResponse = createTaskResponse();
     }
 
     private List<User> createUsers(){
@@ -98,9 +100,14 @@ class TaskFieldControllerIntegrationTest {
                         .priority(TaskPriority.LOW)
                         .status(TaskStatus.COMPLETED)
                         .author(users.get(1))
-                        .assignees(new ArrayList<>(List.of(users.get(0), users.get(2))))
+                        .assignees(new ArrayList<>(List.of(users.get(2))))
                         .build()
         ));
+    }
+
+    private TaskResponse createTaskResponse() {
+        return taskDtoConverter.convertDtoToResponse(
+                taskDtoConverter.convertEntityToDto(tasks.get(0)));
     }
 
     @Test
@@ -297,6 +304,315 @@ class TaskFieldControllerIntegrationTest {
     void getAssignees_UnauthorisedRequest_ShouldReturnForbiddenStatus() throws Exception {
         // Act
         mockMvc.perform(get("/api/tasks/{id}/assignees`", tasks.get(1).getId()))
+                // Assert
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void updateTitle_WhenValidTitleInput_ShouldReturnOkStatusAndTaskResponseWithNewTitle() throws Exception {
+        // Arrange
+        String title = "New Test Title";
+        taskResponse.setTitle(title);
+
+        // Act
+        mockMvc.perform(put("/api/tasks/{id}/title", tasks.get(0).getId())
+                        .header("Authorization", "Bearer " + token)
+                        .param("title", title))
+                // Assert
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(objectMapper.writeValueAsString(taskResponse)));
+
+    }
+
+    @Test
+    void updateTitle_WithEmptyTitleInput_ShouldReturnBadRequestStatus() throws Exception {
+        // Arrange
+        String title = null;
+
+        // Act
+        mockMvc.perform(put("/api/tasks/{id}/title", tasks.get(0).getId())
+                        .header("Authorization", "Bearer " + token)
+                        .param("title", title))
+                // Assert
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void updateTitle_WithBlankTitleInput_ShouldReturnBadRequestStatus() throws Exception {
+        // Arrange
+        String title = "";
+        taskResponse.setTitle(title);
+
+        // Act
+        mockMvc.perform(put("/api/tasks/{id}/title", tasks.get(0).getId())
+                        .header("Authorization", "Bearer " + token)
+                        .param("title", title))
+                // Assert
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void updateTitle_WhenNotFoundTask_ShouldReturnBadRequestStatus() throws Exception {
+        // Arrange
+        String title = "New Test Title";
+
+        // Act
+        mockMvc.perform(put("/api/tasks/{id}/title", Long.MAX_VALUE)
+                        .header("Authorization", "Bearer " + token)
+                        .param("title", title))
+                // Assert
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void updateTitle_WhenUpdateTitleAnotherUserTask_ShouldReturnBadRequestStatus() throws Exception {
+        // Arrange
+        String title = "New Test Title";
+
+        // Act
+        mockMvc.perform(put("/api/tasks/{id}/title", tasks.get(1).getId())
+                        .header("Authorization", "Bearer " + token)
+                        .param("title", title))
+                // Assert
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void updateTitle_UnauthorisedRequest_ShouldReturnForbiddenStatus() throws Exception {
+        // Arrange
+        String title = "New Test Title";
+
+        // Act
+        mockMvc.perform(put("/api/tasks/{id}/title", tasks.get(0).getId())
+                        .param("title", title))
+                // Assert
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void updateDescription_WhenValidDescriptionInput_ShouldReturnOkStatusAndTaskResponseWithNewDescription() throws Exception {
+        // Arrange
+        String description = "New Test description";
+        taskResponse.setDescription(description);
+
+        // Act
+        mockMvc.perform(put("/api/tasks/{id}/description", tasks.get(0).getId())
+                        .header("Authorization", "Bearer " + token)
+                        .param("description", description))
+                // Assert
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(objectMapper.writeValueAsString(taskResponse)));
+    }
+
+    @Test
+    void updateDescription_WithEmptyDescriptionInput_ShouldReturnBadRequestStatus() throws Exception {
+        // Arrange
+        String description = null;
+
+        // Act
+        mockMvc.perform(put("/api/tasks/{id}/description", tasks.get(0).getId())
+                        .header("Authorization", "Bearer " + token)
+                        .param("description", description))
+                // Assert
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void updateDescription_WhenNotFoundTask_ShouldReturnBadRequestStatus() throws Exception {
+        // Arrange
+        String description = "New Test description";
+
+        // Act
+        mockMvc.perform(put("/api/tasks/{id}/description", Long.MAX_VALUE)
+                        .header("Authorization", "Bearer " + token)
+                        .param("description", description))
+                // Assert
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void updateDescription_WhenUpdateDescriptionAnotherUserTask_ShouldReturnBadRequestStatus() throws Exception {
+        // Arrange
+        String description = "New Test description";
+
+        // Act
+        mockMvc.perform(put("/api/tasks/{id}/description", tasks.get(1).getId())
+                        .header("Authorization", "Bearer " + token)
+                        .param("description", description))
+                // Assert
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void updateDescription_UnauthorisedRequest_ShouldReturnForbiddenStatus() throws Exception {
+        // Arrange
+        String description = "New Test description";
+
+        // Act
+        mockMvc.perform(put("/api/tasks/{id}/description", tasks.get(0).getId())
+                        .param("description", description))
+                // Assert
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void updateStatus_WhenValidStatusValueInput_ShouldReturnOkStatusAndTaskResponseWithNewStatus() throws Exception {
+        // Arrange
+        String statusValue = "3";
+        taskResponse.setStatus(TaskStatus.getByValue(Integer.parseInt(statusValue)));
+
+        // Act
+        mockMvc.perform(put("/api/tasks/{id}/status", tasks.get(0).getId())
+                        .header("Authorization", "Bearer " + token)
+                        .param("status-value", statusValue))
+                // Assert
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(objectMapper.writeValueAsString(taskResponse)));
+    }
+
+    @Test
+    void updateStatus_WithEmptyStatusValueInput_ShouldReturnBadRequestStatus() throws Exception {
+        // Arrange
+        String statusValue = null;
+
+        // Act
+        mockMvc.perform(put("/api/tasks/{id}/status", tasks.get(0).getId())
+                        .header("Authorization", "Bearer " + token)
+                        .param("status-value", statusValue))
+                // Assert
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void updateStatus_WithInvalidStatusValueInput_ShouldReturnBadRequestStatus() throws Exception {
+        // Arrange
+        String statusValue = "5";
+
+        // Act
+        mockMvc.perform(put("/api/tasks/{id}/status", tasks.get(0).getId())
+                        .header("Authorization", "Bearer " + token)
+                        .param("status-value", statusValue))
+                // Assert
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void updateStatus_WhenNotFoundTask_ShouldReturnBadRequestStatus() throws Exception {
+        // Arrange
+        String statusValue = "3";
+
+        // Act
+        mockMvc.perform(put("/api/tasks/{id}/status", Long.MAX_VALUE)
+                        .header("Authorization", "Bearer " + token)
+                        .param("status-value", statusValue))
+                // Assert
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void updateStatus_WhenUpdateStatusAnotherUsersTask_ShouldReturnBadRequestStatus() throws Exception {
+        // Arrange
+        String statusValue = "3";
+
+        // Act
+        mockMvc.perform(put("/api/tasks/{id}/status", tasks.get(1).getId())
+                        .header("Authorization", "Bearer " + token)
+                        .param("status-value", statusValue))
+                // Assert
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void updateStatus_UnauthorisedRequest_ShouldReturnForbiddenStatus() throws Exception {
+        // Arrange
+        String statusValue = "3";
+
+        // Act
+        mockMvc.perform(put("/api/tasks/{id}/status", tasks.get(0).getId())
+                        .param("status-value", statusValue))
+                // Assert
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void updatePriority_WhenValidPriorityValueInput_ShouldReturnOkStatusAndTaskResponseWithNewPriority() throws Exception {
+        // Arrange
+        String priorityValue = "1";
+        taskResponse.setPriority(TaskPriority.getByValue(Integer.parseInt(priorityValue)));
+
+        // Act
+        mockMvc.perform(put("/api/tasks/{id}/priority", tasks.get(0).getId())
+                        .header("Authorization", "Bearer " + token)
+                        .param("priority-value", priorityValue))
+                // Assert
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(objectMapper.writeValueAsString(taskResponse)));
+    }
+
+    @Test
+    void updatePriority_WithEmptyPriorityValueInput_ShouldReturnBadRequestStatus() throws Exception {
+        // Arrange
+        String priorityValue = null;
+
+        // Act
+        mockMvc.perform(put("/api/tasks/{id}/priority", tasks.get(0).getId())
+                        .header("Authorization", "Bearer " + token)
+                        .param("priority-value", priorityValue))
+                // Assert
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void updatePriority_WithInvalidPriorityValueInput_ShouldReturnBadRequestStatus() throws Exception {
+        // Arrange
+        String priorityValue = "5";
+
+        // Act
+        mockMvc.perform(put("/api/tasks/{id}/priority", tasks.get(0).getId())
+                        .header("Authorization", "Bearer " + token)
+                        .param("priority-value", priorityValue))
+                // Assert
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void updatePriority_WhenNotFoundTask_ShouldReturnBadRequestStatus() throws Exception {
+        // Arrange
+        String priorityValue = "3";
+
+        // Act
+        mockMvc.perform(put("/api/tasks/{id}/priority", Long.MAX_VALUE)
+                        .header("Authorization", "Bearer " + token)
+                        .param("priority-value", priorityValue))
+                // Assert
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void updatePriority_WhenUpdatePriorityAnotherUserTask_ShouldReturnBadRequestStatus() throws Exception {
+        // Arrange
+        String priorityValue = "3";
+
+        // Act
+        mockMvc.perform(put("/api/tasks/{id}/priority", tasks.get(1).getId())
+                        .header("Authorization", "Bearer " + token)
+                        .param("priority-value", priorityValue))
+                // Assert
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void updatePriority_UnauthorisedRequest_ShouldReturnForbiddenStatus() throws Exception {
+        // Arrange
+        String priorityValue = "3";
+
+        // Act
+        mockMvc.perform(put("/api/tasks/{id}/priority", tasks.get(0).getId())
+                        .param("priority-value", priorityValue))
                 // Assert
                 .andExpect(status().isForbidden());
     }

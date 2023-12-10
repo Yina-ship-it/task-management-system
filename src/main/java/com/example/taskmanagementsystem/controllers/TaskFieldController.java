@@ -6,16 +6,16 @@ import com.example.taskmanagementsystem.dto.task.TaskDtoConverter;
 import com.example.taskmanagementsystem.dto.task.TaskResponse;
 import com.example.taskmanagementsystem.models.TaskPriority;
 import com.example.taskmanagementsystem.models.TaskStatus;
+import com.example.taskmanagementsystem.models.User;
 import com.example.taskmanagementsystem.services.TaskService;
 import com.example.taskmanagementsystem.services.UserService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.java.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.List;
@@ -34,6 +34,9 @@ public class TaskFieldController {
     private TaskService taskService;
 
     @Autowired
+    private UserService userService;
+
+    @Autowired
     private TaskDtoConverter taskDtoConverter;
 
     @GetMapping("/title")
@@ -41,9 +44,23 @@ public class TaskFieldController {
         return handleFieldRequest(taskId, "title", TaskResponse::getTitle);
     }
 
+    @PutMapping("/title")
+    public ResponseEntity<TaskResponse> updateTitle(
+            @PathVariable Long taskId,
+            @RequestParam String title) {
+        return handleUpdateTaskField(taskId, title, (id, val, user) -> taskService.updateTaskTitleById(id, val, user));
+    }
+
     @GetMapping("/description")
     public ResponseEntity<Map<String, String>> getDescription(@PathVariable Long taskId) {
         return handleFieldRequest(taskId, "description", TaskResponse::getDescription);
+    }
+
+    @PutMapping("/description")
+    public ResponseEntity<TaskResponse> updateDescription(
+            @PathVariable Long taskId,
+            @RequestParam String description) {
+        return handleUpdateTaskField(taskId, description, (id, val, user) -> taskService.updateTaskDescriptionById(id, val, user));
     }
 
     @GetMapping("/status")
@@ -51,9 +68,23 @@ public class TaskFieldController {
         return handleFieldRequest(taskId, "status", TaskResponse::getStatus);
     }
 
+    @PutMapping("/status")
+    public ResponseEntity<TaskResponse> updateStatus(
+            @PathVariable Long taskId,
+            @RequestParam(name = "status-value") Integer statusValue) {
+        return handleUpdateTaskField(taskId, statusValue, (id, val, user) -> taskService.updateTaskStatusById(id, val, user));
+    }
+
     @GetMapping("/priority")
     public ResponseEntity<Map<String, TaskPriority>> getPriority(@PathVariable Long taskId) {
         return handleFieldRequest(taskId, "priority", TaskResponse::getPriority);
+    }
+
+    @PutMapping("/priority")
+    public ResponseEntity<TaskResponse> updatePriority(
+            @PathVariable Long taskId,
+            @RequestParam(name = "priority-value") Integer priorityValue) {
+        return handleUpdateTaskField(taskId, priorityValue, (id, val, user) -> taskService.updateTaskPriorityById(id, val, user));
     }
 
     @GetMapping("/author")
@@ -86,5 +117,32 @@ public class TaskFieldController {
         Map<String, T> response = new HashMap<>();
         response.put(key, value);
         return response;
+    }
+
+    private <T> ResponseEntity<TaskResponse> handleUpdateTaskField(
+            Long taskId,
+            T value,
+            FunctionWithThreeArguments<Long, T, User, TaskDto> updateFunction) {
+        try {
+            UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            User user = userService.findByEmail(userDetails.getUsername());
+            TaskResponse task = taskDtoConverter.convertDtoToResponse(
+                    updateFunction.apply(taskId, value, user));
+            return ResponseEntity.ok(task);
+        } catch (EntityNotFoundException e) {
+            log.severe(e.getMessage());
+            return ResponseEntity.notFound().build();
+        } catch (IllegalArgumentException e) {
+            log.severe(e.getMessage());
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            log.severe(e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @FunctionalInterface
+    interface FunctionWithThreeArguments<T, U, V, R> {
+        R apply(T t, U u, V v);
     }
 }
