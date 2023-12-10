@@ -97,6 +97,34 @@ public class TaskFieldController {
         return handleFieldRequest(taskId, "assignees", TaskResponse::getAssignees);
     }
 
+    @PostMapping("/assignees")
+    public ResponseEntity<TaskResponse> addAssignee(@PathVariable Long taskId,
+            @RequestParam(name = "assignee-id", required = false) Long assigneeId,
+            @RequestParam(name = "assignee-email", required = false) String assigneeEmail) {
+        if (assigneeId != null)
+            return handleUpdateTaskField(taskId, assigneeId,
+                    (id, val, user) -> taskService.appendAssigneeByIdInTask(id, val, user));
+        else if (assigneeEmail != null)
+            return handleUpdateTaskField(taskId, assigneeEmail,
+                    (id, val, user) -> taskService.appendAssigneeByEmailInTask(id, val, user));
+        else
+            return ResponseEntity.badRequest().build();
+    }
+
+    @DeleteMapping("/assignees")
+    public ResponseEntity<TaskResponse> deleteAssignee(@PathVariable Long taskId,
+            @RequestParam(name = "assignee-id", required = false) Long assigneeId,
+            @RequestParam(name = "assignee-email", required = false) String assigneeEmail) {
+        if (assigneeId != null)
+            return handleUpdateTaskField(taskId, assigneeId,
+                    (id, val, user) -> taskService.removeAssigneeByIdInTask(id, val, user));
+        else if (assigneeEmail != null)
+            return handleUpdateTaskField(taskId, assigneeEmail,
+                    (id, val, user) -> taskService.removeAssigneeByEmailInTask(id, val, user));
+        else
+            return ResponseEntity.badRequest().build();
+    }
+
     private <T> ResponseEntity<Map<String, T>> handleFieldRequest(
             Long taskId,
             String key,

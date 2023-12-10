@@ -42,8 +42,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public TaskDto findTaskById(Long id) {
-        Task task = taskRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("task with id=" + id + " not found!"));
+        Task task = getTaskById(id);
         return taskDtoConverter.convertEntityToDto(task);
     }
 
@@ -61,8 +60,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public void deleteTaskById(Long id, User user) {
-        Task task = taskRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Task with id=" + id + " not found!"));
+        Task task = getTaskById(id);
         validateAuthor(task, user);
 
         taskRepository.delete(task);
@@ -70,24 +68,20 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public TaskDto updateTaskTitleById(Long id, String title, User author) {
-        Task task = taskRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("task with id=" + id + " not found!"));
+        Task task = getTaskById(id);
 
         validateAuthor(task, author);
         if (title == null || title.isBlank())
             throw new IllegalArgumentException("Invalid title=" + title);
 
         task.setTitle(title);
-        System.out.println(task);
-        Task newtask = taskRepository.save(task);
-        System.out.println(newtask);
-        return taskDtoConverter.convertEntityToDto(newtask);
+
+        return taskDtoConverter.convertEntityToDto(taskRepository.save(task));
     }
 
     @Override
     public TaskDto updateTaskDescriptionById(Long id, String description, User author) {
-        Task task = taskRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("task with id=" + id + " not found!"));
+        Task task = getTaskById(id);
 
         validateAuthor(task, author);
         if (description == null)
@@ -99,8 +93,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public TaskDto updateTaskStatusById(Long id, Integer taskStatusValue, User authorOrAssignee) {
-        Task task = taskRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("task with id=" + id + " not found!"));
+        Task task = getTaskById(id);
 
         validateAuthorOrAssignee(task, authorOrAssignee);
         task.setStatus(TaskStatus.getByValue(taskStatusValue));
@@ -109,8 +102,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public TaskDto updateTaskPriorityById(Long id, Integer taskPriorityValue, User author) {
-        Task task = taskRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("task with id=" + id + " not found!"));
+        Task task = getTaskById(id);
 
         validateAuthor(task, author);
         task.setPriority(TaskPriority.getByValue(taskPriorityValue));
@@ -119,22 +111,51 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public TaskDto removeAssigneeByIdInTask(Long taskId, Long assigneeId, User author) {
-        return null;
+        Task task = getTaskById(taskId);
+        User assignee = userService.findById(assigneeId);
+
+        validateAuthor(task, author);
+
+        if (task.getAssignees().remove(assignee))
+            return taskDtoConverter.convertEntityToDto(taskRepository.save(task));
+
+        throw new IllegalArgumentException("Assignee with id=" + assigneeId +" does not exist in the Task.assigness");
     }
 
     @Override
     public TaskDto removeAssigneeByEmailInTask(Long taskId, String assigneeEmail, User author) {
-        return null;
+        Task task = getTaskById(taskId);
+        User assignee = userService.findByEmail(assigneeEmail);
+
+        validateAuthor(task, author);
+        if (task.getAssignees().remove(assignee))
+            return taskDtoConverter.convertEntityToDto(taskRepository.save(task));
+
+        throw new IllegalArgumentException("Assignee with email=" + assigneeEmail +" does not exist in the Task.assigness");
     }
 
     @Override
     public TaskDto appendAssigneeByIdInTask(Long taskId, Long assigneeId, User author) {
-        return null;
+        Task task = getTaskById(taskId);
+        User assignee = userService.findById(assigneeId);
+
+        validateAuthor(task, author);
+        if (!task.getAssignees().contains(assignee))
+            task.getAssignees().add(assignee);
+
+        return taskDtoConverter.convertEntityToDto(taskRepository.save(task));
     }
 
     @Override
     public TaskDto appendAssigneeByEmailInTask(Long taskId, String assigneeEmail, User author) {
-        return null;
+        Task task = getTaskById(taskId);
+        User assignee = userService.findByEmail(assigneeEmail);
+
+        validateAuthor(task, author);
+        if (!task.getAssignees().contains(assignee))
+            task.getAssignees().add(assignee);
+
+        return taskDtoConverter.convertEntityToDto(taskRepository.save(task));
     }
 
     private void validateTaskDto(TaskDto taskDto) {
@@ -166,5 +187,10 @@ public class TaskServiceImpl implements TaskService {
                     }
                     throw new IllegalArgumentException("Task contains an invalid assignee! The assignee must have at least an id or email.");
                 }).distinct().collect(Collectors.toList());
+    }
+
+    private Task getTaskById(Long id) {
+        return taskRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("task with id=" + id + " not found!"));
     }
 }

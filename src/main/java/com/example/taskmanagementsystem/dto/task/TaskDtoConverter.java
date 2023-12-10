@@ -9,7 +9,6 @@ import com.example.taskmanagementsystem.models.User;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -92,7 +91,7 @@ public class TaskDtoConverter implements DtoConverter<Task, TaskDto, TaskRequest
                                 .name(assignee.getName())
                                 .email(assignee.getEmail())
                                 .build())
-                        .toList())
+                        .collect(Collectors.toList()))
                 .build();
     }
 

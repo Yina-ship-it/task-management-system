@@ -26,8 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -80,7 +79,8 @@ class TaskFieldControllerIntegrationTest {
         return userRepository.saveAll(List.of(
                 User.builder().name("maksim1").email("maksim1@mail.test").password(password).build(),
                 User.builder().name("maksim2").email("maksim2@mail.test").password(password).build(),
-                User.builder().name("maksim3").email("maksim3@mail.test").password(password).build()
+                User.builder().name("maksim3").email("maksim3@mail.test").password(password).build(),
+                User.builder().name("maksim4").email("maksim4@mail.test").password(password).build()
         ));
     }
 
@@ -613,6 +613,397 @@ class TaskFieldControllerIntegrationTest {
         // Act
         mockMvc.perform(put("/api/tasks/{id}/priority", tasks.get(0).getId())
                         .param("priority-value", priorityValue))
+                // Assert
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void addAssignee_WhenValidAssignIdInput_ShouldReturnOkStatusAndTaskResponseWithNewAssignee() throws Exception {
+        // Arrange
+        String assigneeId = users.get(3).getId().toString();
+        taskResponse.getAssignees().add(UserResponse.builder()
+                .id(users.get(3).getId())
+                .email(users.get(3).getEmail())
+                .name(users.get(3).getName())
+                .build());
+
+        // Act
+        mockMvc.perform(post("/api/tasks/{id}/assignees", tasks.get(0).getId())
+                        .header("Authorization", "Bearer " + token)
+                        .param("assignee-id", assigneeId))
+                // Assert
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(objectMapper.writeValueAsString(taskResponse)));
+    }
+
+    @Test
+    void addAssignee_WhenAssignIdInputAndAssignExist_ShouldReturnOkStatusAndTaskResponseWithOldListOfAssignees() throws Exception {
+        // Arrange
+        String assigneeId = users.get(2).getId().toString();
+
+        // Act
+        mockMvc.perform(post("/api/tasks/{id}/assignees", tasks.get(0).getId())
+                        .header("Authorization", "Bearer " + token)
+                        .param("assignee-id", assigneeId))
+                // Assert
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(objectMapper.writeValueAsString(taskResponse)));
+    }
+
+    @Test
+    void addAssignee_WhenInvalidAssignIdInput_ShouldReturnBadRequestStatus() throws Exception {
+        // Arrange
+        String assigneeId = users.get(3).getEmail();
+
+        // Act
+        mockMvc.perform(post("/api/tasks/{id}/assignees", tasks.get(0).getId())
+                        .header("Authorization", "Bearer " + token)
+                        .param("assignee-id", assigneeId))
+                // Assert
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void addAssignee_WhenEmptyAssignIdInput_ShouldReturnBadRequestStatus() throws Exception {
+        // Arrange
+        String assigneeId = null;
+
+        // Act
+        mockMvc.perform(post("/api/tasks/{id}/assignees", tasks.get(0).getId())
+                        .header("Authorization", "Bearer " + token)
+                        .param("assignee-id", assigneeId))
+                // Assert
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void addAssignee_WhenAssignIdInputAndAddAssigneeAnotherUserTask_ShouldReturnBadRequestStatus() throws Exception {
+        // Arrange
+        String assigneeId = users.get(3).getId().toString();
+
+        // Act
+        mockMvc.perform(post("/api/tasks/{id}/assignees", tasks.get(1).getId())
+                        .header("Authorization", "Bearer " + token)
+                        .param("assignee-id", assigneeId))
+                // Assert
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void addAssignee_WhenAssignIdInputAndAssigneeNotFound_ShouldReturnNotFoundStatus() throws Exception {
+        // Arrange
+        String assigneeId = String.valueOf(Long.MAX_VALUE);
+
+        // Act
+        mockMvc.perform(post("/api/tasks/{id}/assignees", tasks.get(0).getId())
+                        .header("Authorization", "Bearer " + token)
+                        .param("assignee-id", assigneeId))
+                // Assert
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void addAssignee_WhenAssignIdInputAndTaskNotFound_ShouldReturnNotFoundStatus() throws Exception {
+        // Arrange
+        String assigneeId = users.get(3).getId().toString();
+
+        // Act
+        mockMvc.perform(post("/api/tasks/{id}/assignees", Long.MAX_VALUE)
+                        .header("Authorization", "Bearer " + token)
+                        .param("assignee-id", assigneeId))
+                // Assert
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void addAssignee_WhenValidAssignEmailInput_ShouldReturnOkStatusAndTaskResponseWithNewAssignee() throws Exception {
+        // Arrange
+        String assigneeEmail = users.get(3).getEmail();
+        taskResponse.getAssignees().add(UserResponse.builder()
+                .id(users.get(3).getId())
+                .email(users.get(3).getEmail())
+                .name(users.get(3).getName())
+                .build());
+
+        // Act
+        mockMvc.perform(post("/api/tasks/{id}/assignees", tasks.get(0).getId())
+                        .header("Authorization", "Bearer " + token)
+                        .param("assignee-email", assigneeEmail))
+                // Assert
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(objectMapper.writeValueAsString(taskResponse)));
+    }
+
+    @Test
+    void addAssignee_WhenAssignEmailInputAndAssignExist_ShouldReturnOkStatusAndTaskResponseWithNewAssignee() throws Exception {
+        // Arrange
+        String assigneeEmail = users.get(3).getEmail();
+        taskResponse.getAssignees().add(UserResponse.builder()
+                .id(users.get(3).getId())
+                .email(users.get(3).getEmail())
+                .name(users.get(3).getName())
+                .build());
+
+        // Act
+        mockMvc.perform(post("/api/tasks/{id}/assignees", tasks.get(0).getId())
+                        .header("Authorization", "Bearer " + token)
+                        .param("assignee-email", assigneeEmail))
+                // Assert
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(objectMapper.writeValueAsString(taskResponse)));
+    }
+
+    @Test
+    void addAssignee_WhenEmptyAssignEmailInput_ShouldReturnBadRequestStatus() throws Exception {
+        // Arrange
+        String assigneeEmail = null;
+
+        // Act
+        mockMvc.perform(post("/api/tasks/{id}/assignees", tasks.get(0).getId())
+                        .header("Authorization", "Bearer " + token)
+                        .param("assignee-email", assigneeEmail))
+                // Assert
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void addAssignee_WhenAssignEmailInputAndAddAssigneeAnotherUserTask_ShouldReturnBadRequestStatus() throws Exception {
+        // Arrange
+        String assigneeEmail = users.get(3).getEmail();
+
+        // Act
+        mockMvc.perform(post("/api/tasks/{id}/assignees", tasks.get(1).getId())
+                        .header("Authorization", "Bearer " + token)
+                        .param("assignee-email", assigneeEmail))
+                // Assert
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void addAssignee_WhenAssignEmailInputAndAssigneeNotFound_ShouldReturnNotFoundStatus() throws Exception {
+        // Arrange
+        String assigneeEmail = "emilKotorogoNigdeNet@mail.test";
+
+        // Act
+        mockMvc.perform(post("/api/tasks/{id}/assignees", tasks.get(0).getId())
+                        .header("Authorization", "Bearer " + token)
+                        .param("assignee-email", assigneeEmail))
+                // Assert
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void addAssignee_WhenAssignEmailInputAndTaskNotFound_ShouldReturnNotFoundStatus() throws Exception {
+        // Arrange
+        String assigneeEmail = users.get(3).getEmail();
+
+        // Act
+        mockMvc.perform(post("/api/tasks/{id}/assignees", Long.MAX_VALUE)
+                        .header("Authorization", "Bearer " + token)
+                        .param("assignee-email", assigneeEmail))
+                // Assert
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void addAssignee_UnauthorisedRequest_ShouldReturnForbiddenStatus() throws Exception {
+        // Arrange
+        String assigneeEmail = users.get(3).getEmail();
+
+        // Act
+        mockMvc.perform(post("/api/tasks/{id}/assignees", tasks.get(0).getId())
+                        .param("assignee-email", assigneeEmail))
+                // Assert
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void deleteAssignee_WhenValidAssignIdInput_ShouldReturnOkStatusAndTaskResponseWithoutRemoteAssignee() throws Exception {
+        // Arrange
+        String assigneeId = users.get(2).getId().toString();
+        taskResponse.getAssignees().remove(1);
+
+        // Act
+        mockMvc.perform(delete("/api/tasks/{id}/assignees", tasks.get(0).getId())
+                        .header("Authorization", "Bearer " + token)
+                        .param("assignee-id", assigneeId))
+                // Assert
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(objectMapper.writeValueAsString(taskResponse)));
+    }
+
+    @Test
+    void deleteAssignee_WhenAssignIdInputAndAssignNonExist_ShouldReturnBadRequestStatus() throws Exception {
+        // Arrange
+        String assigneeId = users.get(3).getId().toString();
+
+        // Act
+        mockMvc.perform(delete("/api/tasks/{id}/assignees", tasks.get(0).getId())
+                        .header("Authorization", "Bearer " + token)
+                        .param("assignee-id", assigneeId))
+                // Assert
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void deleteAssignee_WhenInvalidAssignIdInput_ShouldReturnBadRequestStatus() throws Exception {
+        // Arrange
+        String assigneeId = users.get(3).getEmail();
+
+        // Act
+        mockMvc.perform(delete("/api/tasks/{id}/assignees", tasks.get(0).getId())
+                        .header("Authorization", "Bearer " + token)
+                        .param("assignee-id", assigneeId))
+                // Assert
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void deleteAssignee_WhenEmptyAssignIdInput_ShouldReturnBadRequestStatus() throws Exception {
+        // Arrange
+        String assigneeId = null;
+
+        // Act
+        mockMvc.perform(delete("/api/tasks/{id}/assignees", tasks.get(0).getId())
+                        .header("Authorization", "Bearer " + token)
+                        .param("assignee-id", assigneeId))
+                // Assert
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void deleyeAssignee_WhenAssignIdInputAndDeleteAssigneeAnotherUserTask_ShouldReturnBadRequestStatus() throws Exception {
+        // Arrange
+        String assigneeId = users.get(2).getId().toString();
+
+        // Act
+        mockMvc.perform(delete("/api/tasks/{id}/assignees", tasks.get(1).getId())
+                        .header("Authorization", "Bearer " + token)
+                        .param("assignee-id", assigneeId))
+                // Assert
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void deleteAssignee_WhenAssignIdInputAndAssigneeNotFound_ShouldReturnNotFoundStatus() throws Exception {
+        // Arrange
+        String assigneeId = String.valueOf(Long.MAX_VALUE);
+
+        // Act
+        mockMvc.perform(delete("/api/tasks/{id}/assignees", tasks.get(0).getId())
+                        .header("Authorization", "Bearer " + token)
+                        .param("assignee-id", assigneeId))
+                // Assert
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void deleteAssignee_WhenAssignIdInputAndTaskNotFound_ShouldReturnNotFoundStatus() throws Exception {
+        // Arrange
+        String assigneeId = users.get(2).getId().toString();
+
+        // Act
+        mockMvc.perform(delete("/api/tasks/{id}/assignees", Long.MAX_VALUE)
+                        .header("Authorization", "Bearer " + token)
+                        .param("assignee-id", assigneeId))
+                // Assert
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void deleteAssignee_WhenValidAssignEmailInput_ShouldReturnOkStatusAndTaskResponseWithoutRemoteAssignee() throws Exception {
+        // Arrange
+        String assigneeEmail = users.get(2).getEmail();
+        taskResponse.getAssignees().remove(1);
+
+        // Act
+        mockMvc.perform(delete("/api/tasks/{id}/assignees", tasks.get(0).getId())
+                        .header("Authorization", "Bearer " + token)
+                        .param("assignee-email", assigneeEmail))
+                // Assert
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(objectMapper.writeValueAsString(taskResponse)));
+    }
+
+    @Test
+    void deleteAssignee_WhenAssignEmailInputAndAssignNonExist_ShouldReturnBadRequestStatus() throws Exception {
+        // Arrange
+        String assigneeEmail = users.get(3).getEmail();
+
+        // Act
+        mockMvc.perform(delete("/api/tasks/{id}/assignees", tasks.get(0).getId())
+                        .header("Authorization", "Bearer " + token)
+                        .param("assignee-email", assigneeEmail))
+                // Assert
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void deleteAssignee_WhenEmptyAssignEmailInput_ShouldReturnBadRequestStatus() throws Exception {
+        // Arrange
+        String assigneeEmail = null;
+
+        // Act
+        mockMvc.perform(delete("/api/tasks/{id}/assignees", tasks.get(0).getId())
+                        .header("Authorization", "Bearer " + token)
+                        .param("assignee-email", assigneeEmail))
+                // Assert
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void deleteAssignee_WhenAssignEmailInputAndDeleteAssigneeAnotherUserTask_ShouldReturnBadRequestStatus() throws Exception {
+        // Arrange
+        String assigneeEmail = users.get(2).getEmail();
+
+        // Act
+        mockMvc.perform(post("/api/tasks/{id}/assignees", tasks.get(1).getId())
+                        .header("Authorization", "Bearer " + token)
+                        .param("assignee-email", assigneeEmail))
+                // Assert
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void deleteAssignee_WhenAssignEmailInputAndAssigneeNotFound_ShouldReturnNotFoundStatus() throws Exception {
+        // Arrange
+        String assigneeEmail = "emilKotorogoNigdeNet@mail.test";
+
+        // Act
+        mockMvc.perform(delete("/api/tasks/{id}/assignees", tasks.get(0).getId())
+                        .header("Authorization", "Bearer " + token)
+                        .param("assignee-email", assigneeEmail))
+                // Assert
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void deleteAssignee_WhenAssignEmailInputAndTaskNotFound_ShouldReturnNotFoundStatus() throws Exception {
+        // Arrange
+        String assigneeEmail = users.get(2).getEmail();
+
+        // Act
+        mockMvc.perform(delete("/api/tasks/{id}/assignees", Long.MAX_VALUE)
+                        .header("Authorization", "Bearer " + token)
+                        .param("assignee-email", assigneeEmail))
+                // Assert
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void deleteAssignee_UnauthorisedRequest_ShouldReturnForbiddenStatus() throws Exception {
+        // Arrange
+        String assigneeEmail = users.get(2).getEmail();
+
+        // Act
+        mockMvc.perform(delete("/api/tasks/{id}/assignees", tasks.get(0).getId())
+                        .param("assignee-email", assigneeEmail))
                 // Assert
                 .andExpect(status().isForbidden());
     }
