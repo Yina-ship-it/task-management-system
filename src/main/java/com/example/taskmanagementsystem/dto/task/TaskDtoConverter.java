@@ -8,8 +8,10 @@ import com.example.taskmanagementsystem.models.TaskStatus;
 import com.example.taskmanagementsystem.models.User;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author Yina-ship-it
@@ -26,7 +28,7 @@ public class TaskDtoConverter implements DtoConverter<Task, TaskDto, TaskRequest
                 .priority(task.getPriority())
                 .status(task.getStatus())
                 .author(task.getAuthor())
-                .assignees(task.getAssignees().stream().toList())
+                .assignees(new ArrayList<>(task.getAssignees()))
                 .build();
     }
 
@@ -34,10 +36,8 @@ public class TaskDtoConverter implements DtoConverter<Task, TaskDto, TaskRequest
     public Task convertDtoToEntity(TaskDto taskDto) {
         return Task.builder()
                 .id(taskDto.getId())
-                .title(getNonBlankString(taskDto.getTitle()))
-                .description(taskDto.getDescription() != null ?
-                        taskDto.getDescription() :
-                        "")
+                .title(taskDto.getTitle())
+                .description(taskDto.getDescription())
                 .priority(taskDto.getPriority())
                 .status(taskDto.getStatus())
                 .author(taskDto.getAuthor())
@@ -47,13 +47,21 @@ public class TaskDtoConverter implements DtoConverter<Task, TaskDto, TaskRequest
 
     @Override
     public TaskDto convertRequestToDto(TaskRequest taskRequest) {
-        List<User> assignees = taskRequest.getAssigneesEmail().stream()
+        List<User> assignees = new ArrayList<>();
+        if (taskRequest.getAssigneesEmail() != null)
+            assignees = taskRequest.getAssigneesEmail().stream()
                 .map(email -> User.builder().email(email).build())
-                .toList();
-        taskRequest.getAssigneesId().forEach(id -> assignees.add(User.builder().id(id).build()));
+                .collect(Collectors.toList());
+        if (taskRequest.getAssigneesId() != null){
+            for (Long id : taskRequest.getAssigneesId()) {
+                assignees.add(User.builder().id(id).build());
+            }
+        }
         return TaskDto.builder()
-                .title(taskRequest.getTitle())
-                .description(taskRequest.getDescription())
+                .title(getNonBlankString(taskRequest.getTitle()))
+                .description(taskRequest.getDescription() != null ?
+                        taskRequest.getDescription() :
+                        "")
                 .status(taskRequest.getStatusValue() != null ?
                         TaskStatus.getByValue(taskRequest.getStatusValue()) :
                         TaskStatus.PENDING)
