@@ -504,4 +504,42 @@ class TaskControllerIntegrationTest {
         assertEquals(users.get(0), createdTask.get().getAuthor());
         assertEquals(0, createdTask.get().getAssignees().size());
     }
+
+    @Test
+    void deleteTask_ShouldReturnOkStatus () throws Exception {
+        // Act
+        mockMvc.perform(delete("/api/tasks/{id}", tasks.get(0).getId())
+                .header("Authorization", "Bearer " + token).contentType(MediaType.APPLICATION_JSON))
+            // Assert
+                .andExpect(status().isOk());
+
+        assertEquals(tasks.size() - 1, taskRepository.findAll().size());
+    }
+
+    @Test
+    void deleteTask_UnauthorisedRequest_ShouldReturnForbiddenStatus () throws Exception {
+        // Act
+        mockMvc.perform(delete("/api/tasks/{id}", tasks.get(0).getId()))
+                // Assert
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void deleteTask_WhenDeleteAnotherUserTask_ShouldReturnBadRequestStatus () throws Exception {
+        // Act
+        mockMvc.perform(delete("/api/tasks/{id}", tasks.get(1).getId())
+                        .header("Authorization", "Bearer " + token).contentType(MediaType.APPLICATION_JSON))
+
+                // Assert
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void deleteTask_WhenTaskNotFound_ShouldReturnNotFoundStatus () throws Exception {
+        // Act
+        mockMvc.perform(delete("/api/tasks/{id}", Long.MAX_VALUE)
+                .header("Authorization", "Bearer " + token).contentType(MediaType.APPLICATION_JSON))
+                // Assert
+                .andExpect(status().isNotFound());
+    }
 }

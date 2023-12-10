@@ -80,4 +80,22 @@ public class TaskController {
             return ResponseEntity.internalServerError().build();
         }
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteTask(@PathVariable Long id){
+        try{
+            UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            User user = userService.findByEmail(userDetails.getUsername());
+            taskService.deleteTaskById(id, user);
+            return ResponseEntity.ok().build();
+        } catch (EntityNotFoundException e) {
+            log.severe(e.getMessage());
+            return ResponseEntity.notFound().build();
+        } catch (IllegalArgumentException e) {
+            log.severe(e.getMessage());
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
 }
