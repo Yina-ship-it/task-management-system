@@ -60,7 +60,7 @@ class TaskControllerIntegrationTest {
     private JwtProvider jwtProvider;
 
     @Test
-    void getAllTasks_AuthorisedRequest_ShouldReturnListOfCountries() throws Exception {
+    void getAllTasks_ShouldReturnListOfTaskResponses() throws Exception {
         // Arrange
         String password = passwordEncoder.encode("Password");
         User user1 = userRepository.save(
@@ -106,9 +106,71 @@ class TaskControllerIntegrationTest {
     }
 
     @Test
-    void getAllTasks_UnauthorisedRequest_ShouldReturnForribenStatus() throws Exception {
+    void getAllTasks_UnauthorisedRequest_ShouldReturnForbiddenStatus() throws Exception {
         // Act
         mockMvc.perform(get("/api/tasks/"))
+                // Assert
+                .andExpect(status().isForbidden());
+
+    }
+
+    @Test
+    void getTaskById_WhenTaskFound_ShouldTaskResponse() throws Exception {
+        // Arrange
+        String password = passwordEncoder.encode("Password");
+        User user1 = userRepository.save(
+                User.builder().name("maksim1").email("maksim1@mail.test").password(password).build());
+        User user2 = userRepository.save(
+                User.builder().name("maksim2").email("maksim2@mail.test").password(password).build());
+        User user3 = userRepository.save(
+                User.builder().name("maksim3").email("maksim3@mail.test").password(password).build());
+
+        Task task = taskRepository.save(Task.builder()
+                        .title("TestTask1")
+                        .description("task 1")
+                        .priority(TaskPriority.MEDIUM)
+                        .status(TaskStatus.IN_PROGRESS)
+                        .author(user1)
+                        .assignees(Set.of(user2, user3))
+                        .build());
+        TaskResponse taskResponse = taskDtoConverter.convertDtoToResponse(taskDtoConverter.convertEntityToDto(task));
+
+        String token = jwtProvider.generateToken(user1.getEmail());
+
+        // Act
+        mockMvc.perform(get("/api/tasks/{id}", task.getId())
+                        .header("Authorization", "Bearer " + token))
+                // Assert
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(objectMapper.writeValueAsString(taskResponse)));
+
+    }
+
+    @Test
+    void getTaskById_WhenTaskNotFound_ShouldReturnNotFoundStatus() throws Exception {
+        // Arrange
+        String password = passwordEncoder.encode("Password");
+        User user1 = userRepository.save(
+                User.builder().name("maksim1").email("maksim1@mail.test").password(password).build());
+
+        long id = Long.MAX_VALUE;
+
+        String token = jwtProvider.generateToken(user1.getEmail());
+
+        // Act
+        mockMvc.perform(get("/api/tasks/{id}", id)
+                        .header("Authorization", "Bearer " + token))
+                // Assert
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void getTaskById_UnauthorisedRequest_ShouldReturnForbiddenStatus() throws Exception {
+        // Act
+        long id = Long.MAX_VALUE;
+
+        mockMvc.perform(get("/api/tasks/{id}", id))
                 // Assert
                 .andExpect(status().isForbidden());
 
