@@ -13,6 +13,5 @@ public interface TaskService {
     List<TaskDto> findAllTasks();
     TaskDto findTaskById(Long id);
     TaskDto createTask(TaskDto taskDto);
-    TaskDto updateTask(TaskDto updatedTaskDto);
     void deleteTaskById(Long id, User user);
 }

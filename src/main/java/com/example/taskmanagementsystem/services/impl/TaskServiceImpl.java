@@ -62,22 +62,6 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public TaskDto updateTask(TaskDto updatedTaskDto) {
-        Task oldTask = taskRepository.findById(updatedTaskDto.getId())
-                .orElseThrow(() -> new EntityNotFoundException("Task with id=" + updatedTaskDto.getId() + " not found!"));
-
-        validateTaskDto(updatedTaskDto);
-        validateAuthor(oldTask, updatedTaskDto.getAuthor());
-
-        Set<User> assignees = getAssigneesFromDto(updatedTaskDto);
-
-        oldTask = taskDtoConverter.convertDtoToEntity(updatedTaskDto);
-        oldTask.setAssignees(assignees);
-
-        return taskDtoConverter.convertEntityToDto(taskRepository.save(oldTask));
-    }
-
-    @Override
     public void deleteTaskById(Long id, User user) {
         Task task = taskRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Task with id=" + id + " not found!"));
