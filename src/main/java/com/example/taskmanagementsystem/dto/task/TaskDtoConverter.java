@@ -2,10 +2,12 @@ package com.example.taskmanagementsystem.dto.task;
 
 import com.example.taskmanagementsystem.dto.DtoConverter;
 import com.example.taskmanagementsystem.dto.profile.UserResponse;
+import com.example.taskmanagementsystem.dto.profile.UserResponseConverter;
 import com.example.taskmanagementsystem.models.Task;
 import com.example.taskmanagementsystem.models.TaskPriority;
 import com.example.taskmanagementsystem.models.TaskStatus;
 import com.example.taskmanagementsystem.models.User;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -18,6 +20,10 @@ import java.util.stream.Collectors;
  */
 @Component
 public class TaskDtoConverter implements DtoConverter<Task, TaskDto, TaskRequest, TaskResponse> {
+
+    @Autowired
+    UserResponseConverter userResponseConverter;
+
     @Override
     public TaskDto convertEntityToDto(Task task) {
         return TaskDto.builder()
@@ -79,18 +85,10 @@ public class TaskDtoConverter implements DtoConverter<Task, TaskDto, TaskRequest
                 .description(taskDto.getDescription())
                 .priority(taskDto.getPriority())
                 .status(taskDto.getStatus())
-                .author(UserResponse.builder()
-                        .id(taskDto.getAuthor().getId())
-                        .name(taskDto.getAuthor().getName())
-                        .email(taskDto.getAuthor().getEmail())
-                        .build())
+                .author(userResponseConverter.convertUserToResponse(taskDto.getAuthor()))
                 .assignees(taskDto.getAssignees()
                         .stream()
-                        .map(assignee -> UserResponse.builder()
-                                .id(assignee.getId())
-                                .name(assignee.getName())
-                                .email(assignee.getEmail())
-                                .build())
+                        .map(userResponseConverter::convertUserToResponse)
                         .collect(Collectors.toList()))
                 .build();
     }

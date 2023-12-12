@@ -111,6 +111,38 @@ class TaskFieldControllerIntegrationTest {
     }
 
     @Test
+    void getId_ShouldReturnOkStatusAndTaskId() throws Exception {
+        // Arrange
+        Map<String, Long> response = new HashMap<>();
+        response.put("id", tasks.get(1).getId());
+
+        // Act
+        mockMvc.perform(get("/api/tasks/{id}/id", tasks.get(1).getId())
+                        .header("Authorization", "Bearer " + token))
+                // Assert
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(objectMapper.writeValueAsString(response)));
+    }
+
+    @Test
+    void getId_WhenTaskNotFound_ShouldReturnNotFoundStatus() throws Exception {
+        // Act
+        mockMvc.perform(get("/api/tasks/{id}/id", Long.MAX_VALUE)
+                        .header("Authorization", "Bearer " + token))
+                // Assert
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void getId_UnauthorisedRequest_ShouldReturnForbiddenStatus() throws Exception {
+        // Act
+        mockMvc.perform(get("/api/tasks/{id}/id", tasks.get(1).getId()))
+                // Assert
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     void getTitle_ShouldReturnOkStatusAndTaskTitle() throws Exception {
         // Arrange
         Map<String, String> response = new HashMap<>();

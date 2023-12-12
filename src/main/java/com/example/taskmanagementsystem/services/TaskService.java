@@ -25,4 +25,7 @@ public interface TaskService {
     TaskDto removeAssigneeByEmailInTask(Long taskId, String assigneeEmail, User author);
     TaskDto appendAssigneeByIdInTask(Long taskId, Long assigneeId, User author);
     TaskDto appendAssigneeByEmailInTask(Long taskId, String assigneeEmail, User author);
+
+    List<TaskDto> findAllTasksByAuthor(User author);
+    List<TaskDto> findAllTasksByAssignee(User assignee);
 }

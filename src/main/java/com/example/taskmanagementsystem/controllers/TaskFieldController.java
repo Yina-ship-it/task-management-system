@@ -39,6 +39,11 @@ public class TaskFieldController {
     @Autowired
     private TaskDtoConverter taskDtoConverter;
 
+    @GetMapping("/id")
+    public ResponseEntity<Map<String, Long>> getId(@PathVariable Long taskId) {
+        return handleFieldRequest(taskId, "id", TaskResponse::getId);
+    }
+
     @GetMapping("/title")
     public ResponseEntity<Map<String, String>> getTitle(@PathVariable Long taskId) {
         return handleFieldRequest(taskId, "title", TaskResponse::getTitle);

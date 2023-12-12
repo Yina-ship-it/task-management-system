@@ -158,6 +158,18 @@ public class TaskServiceImpl implements TaskService {
         return taskDtoConverter.convertEntityToDto(taskRepository.save(task));
     }
 
+    @Override
+    public List<TaskDto> findAllTasksByAuthor(User author) {
+        List<Task> tasks = taskRepository.findAllByAuthor(author);
+        return tasks.stream().map(taskDtoConverter::convertEntityToDto).toList();
+    }
+
+    @Override
+    public List<TaskDto> findAllTasksByAssignee(User assignee) {
+        List<Task> tasks = taskRepository.findAllByAssigneesContains(assignee);
+        return tasks.stream().map(taskDtoConverter::convertEntityToDto).toList();
+    }
+
     private void validateTaskDto(TaskDto taskDto) {
         if (taskDto.getTitle() == null) {
             throw new IllegalArgumentException("Invalid title=null");
