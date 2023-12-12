@@ -1,6 +1,6 @@
 package com.example.taskmanagementsystem.controllers;
 
-import com.example.taskmanagementsystem.dto.profile.UserResponse;
+import com.example.taskmanagementsystem.dto.user.UserResponse;
 import com.example.taskmanagementsystem.dto.task.TaskDtoConverter;
 import com.example.taskmanagementsystem.dto.task.TaskResponse;
 import com.example.taskmanagementsystem.models.Task;
@@ -25,7 +25,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;

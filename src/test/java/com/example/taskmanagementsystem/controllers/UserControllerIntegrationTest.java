@@ -1,7 +1,7 @@
 package com.example.taskmanagementsystem.controllers;
 
-import com.example.taskmanagementsystem.dto.profile.UserResponse;
-import com.example.taskmanagementsystem.dto.profile.UserResponseConverter;
+import com.example.taskmanagementsystem.dto.user.UserResponse;
+import com.example.taskmanagementsystem.dto.user.UserResponseConverter;
 import com.example.taskmanagementsystem.dto.task.TaskDtoConverter;
 import com.example.taskmanagementsystem.dto.task.TaskResponse;
 import com.example.taskmanagementsystem.models.Task;
@@ -30,7 +30,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;

@@ -1,8 +1,6 @@
 package com.example.taskmanagementsystem.dto.comment;
 
-import com.example.taskmanagementsystem.dto.profile.UserResponse;
-import com.example.taskmanagementsystem.models.Task;
-import com.example.taskmanagementsystem.models.User;
+import com.example.taskmanagementsystem.dto.user.UserResponse;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import lombok.AllArgsConstructor;

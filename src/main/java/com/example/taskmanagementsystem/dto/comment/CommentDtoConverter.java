@@ -1,8 +1,7 @@
 package com.example.taskmanagementsystem.dto.comment;
 
 import com.example.taskmanagementsystem.dto.DtoConverter;
-import com.example.taskmanagementsystem.dto.profile.UserResponse;
-import com.example.taskmanagementsystem.dto.profile.UserResponseConverter;
+import com.example.taskmanagementsystem.dto.user.UserResponseConverter;
 import com.example.taskmanagementsystem.models.Comment;
 import com.example.taskmanagementsystem.models.Task;
 import org.springframework.beans.factory.annotation.Autowired;
