@@ -1,5 +1,6 @@
 package com.example.taskmanagementsystem.controllers;
 
+import com.example.taskmanagementsystem.dto.profile.UserResponse;
 import com.example.taskmanagementsystem.models.User;
 import com.example.taskmanagementsystem.repositories.UserRepository;
 import com.example.taskmanagementsystem.security.JwtProvider;
@@ -63,7 +64,7 @@ class AuthControllerIntegrationTest {
 
     @Test
     void registerUser_WhenValidRegistrationRequest_ShouldReturnOkStatus() throws Exception {
-        RegistrationRequest registrationRequest = new RegistrationRequest("test@email.test", "TestPassword");
+        RegistrationRequest registrationRequest = new RegistrationRequest("test@email.test", "TestPassword", "maksim");
 
         mockMvc.perform(post("/register")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -82,10 +83,11 @@ class AuthControllerIntegrationTest {
                 User.builder()
                         .email("test@email.test")
                         .password("TestPassword1")
+                        .name("maksim")
                         .build()
         );
 
-        RegistrationRequest registrationRequest = new RegistrationRequest(user.getEmail(), "TestPassword2");
+        RegistrationRequest registrationRequest = new RegistrationRequest(user.getEmail(), "TestPassword2", "maksim");
 
         mockMvc.perform(post("/register")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -97,6 +99,7 @@ class AuthControllerIntegrationTest {
     void registerUser_WhenRegistrationRequestWithoutEmail_ShouldReturnBadRequestStatus() throws Exception {
         RegistrationRequest registrationRequest = RegistrationRequest.builder()
                 .password("TestPassword")
+                .name("maksim")
                 .build();
 
         mockMvc.perform(post("/register")
@@ -109,6 +112,20 @@ class AuthControllerIntegrationTest {
     void registerUser_WhenRegistrationRequestWithoutPassword_ShouldReturnBadRequestStatus() throws Exception {
         RegistrationRequest registrationRequest = RegistrationRequest.builder()
                 .email("test@email.test")
+                .name("maksim")
+                .build();
+
+        mockMvc.perform(post("/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(registrationRequest)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void registerUser_WhenRegistrationRequestWithoutName_ShouldReturnBadRequestStatus() throws Exception {
+        RegistrationRequest registrationRequest = RegistrationRequest.builder()
+                .email("test@email.test")
+                .password("TestPassword")
                 .build();
 
         mockMvc.perform(post("/register")
@@ -119,7 +136,7 @@ class AuthControllerIntegrationTest {
 
     @Test
     void registerUser_WhenRegistrationRequestWithInvalidEmail_ShouldReturnBadRequestStatus() throws Exception {
-        RegistrationRequest registrationRequest = new RegistrationRequest("TestInvalidEmail", "TestPassword");
+        RegistrationRequest registrationRequest = new RegistrationRequest("TestInvalidEmail", "TestPassword", "maksim");
 
         mockMvc.perform(post("/register")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -134,6 +151,7 @@ class AuthControllerIntegrationTest {
                 User.builder()
                         .email(authRequest.getEmail())
                         .password(passwordEncoder.encode(authRequest.getPassword()))
+                        .name("maksim")
                         .build()
         );
 
@@ -155,6 +173,7 @@ class AuthControllerIntegrationTest {
                 User.builder()
                         .email(authRequest.getEmail())
                         .password(passwordEncoder.encode("TestPassword1"))
+                        .name("maksim")
                         .build()
         );
 
@@ -204,18 +223,21 @@ class AuthControllerIntegrationTest {
                 User.builder()
                         .email("test@email.test")
                         .password(passwordEncoder.encode("PasswordTest"))
+                        .name("maksim")
                         .build()
         );
         String jwtToken = jwtProvider.generateToken(user.getEmail());
 
-        String responseContent = mockMvc.perform(get("/me")
+        String responseContent = mockMvc.perform(get("/profile")
                         .header("Authorization", "Bearer " + jwtToken))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
-        User foundUser = objectMapper.readValue(responseContent, User.class);
+        UserResponse foundUser = objectMapper.readValue(responseContent, UserResponse.class);
 
-        assertEquals(foundUser, user);
+        assertNotNull(foundUser);
+        assertEquals(foundUser.getEmail(), user.getEmail());
+        assertEquals(foundUser.getName(), user.getName());
     }
 
     @Test
@@ -224,11 +246,12 @@ class AuthControllerIntegrationTest {
                 User.builder()
                         .email("test1@email.test")
                         .password(passwordEncoder.encode("PasswordTest"))
+                        .name("maksim")
                         .build()
         );
         String jwtToken = jwtProvider.generateToken("test2@email.test");
 
-        mockMvc.perform(get("/me")
+        mockMvc.perform(get("/profile")
                         .header("Authorization", "Bearer " + jwtToken))
                 .andExpect(status().isForbidden());
     }
@@ -239,6 +262,7 @@ class AuthControllerIntegrationTest {
                 User.builder()
                         .email("test@email.test")
                         .password(passwordEncoder.encode("PasswordTest"))
+                        .name("maksim")
                         .build()
         );
         Date date = Date.from(LocalDate.now().minusDays(7).atStartOfDay(ZoneId.systemDefault()).toInstant());
@@ -248,7 +272,7 @@ class AuthControllerIntegrationTest {
                 .signWith(SignatureAlgorithm.HS512, jwtSecret)
                 .compact();
 
-        mockMvc.perform(get("/me")
+        mockMvc.perform(get("/profile")
                         .header("Authorization", "Bearer " + jwtToken))
                 .andExpect(status().isForbidden());
     }

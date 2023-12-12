@@ -1,5 +1,6 @@
 package com.example.taskmanagementsystem.controllers;
 
+import com.example.taskmanagementsystem.dto.profile.UserResponse;
 import com.example.taskmanagementsystem.models.User;
 import com.example.taskmanagementsystem.security.JwtProvider;
 import com.example.taskmanagementsystem.security.dto.AuthRequest;
@@ -32,7 +33,11 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody @Valid RegistrationRequest registrationRequest){
         try {
-            User user = User.builder().email(registrationRequest.getEmail()).password(registrationRequest.getPassword()).build();
+            User user = User.builder()
+                    .email(registrationRequest.getEmail())
+                    .password(registrationRequest.getPassword())
+                    .name(registrationRequest.getName())
+                    .build();
             userService.saveUser(user);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
@@ -52,12 +57,13 @@ public class AuthController {
         }
     }
 
-    @GetMapping("/me")
-    public ResponseEntity<User> getUser() {
+    @GetMapping("/profile")
+    public ResponseEntity<UserResponse> getUser() {
         try {
             UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
             User user = userService.findByEmail(userDetails.getUsername());
-            return ResponseEntity.ok(user);
+            UserResponse response = new UserResponse(user.getId(), user.getName(), user.getEmail());
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();
         }

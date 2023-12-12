@@ -1,4 +1,4 @@
-package com.example.taskmanagementsystem.security.dto;
+package com.example.taskmanagementsystem.dto.profile;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -7,15 +7,14 @@ import lombok.NoArgsConstructor;
 
 /**
  * @author Yina-ship-it
- * @since 08.12.2023
+ * @since 09.12.2023
  */
-
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class RegistrationRequest {
-    private String email;
-    private String password;
+public class UserResponse {
+    private Long id;
     private String name;
+    private String email;
 }
