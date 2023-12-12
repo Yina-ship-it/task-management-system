@@ -1,16 +1,12 @@
 package com.example.taskmanagementsystem.controllers;
 
-import com.example.taskmanagementsystem.dto.profile.UserResponse;
 import com.example.taskmanagementsystem.models.User;
 import com.example.taskmanagementsystem.repositories.UserRepository;
 import com.example.taskmanagementsystem.security.JwtProvider;
 import com.example.taskmanagementsystem.security.dto.AuthRequest;
 import com.example.taskmanagementsystem.security.dto.AuthResponse;
 import com.example.taskmanagementsystem.security.dto.RegistrationRequest;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,9 +20,6 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
-import java.time.ZoneId;
-import java.util.Date;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -55,9 +48,6 @@ class AuthControllerIntegrationTest {
 
     @Autowired
     private JwtProvider jwtProvider;
-
-    @Value("${jwt.secret}")
-    private String jwtSecret;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -215,65 +205,5 @@ class AuthControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(authRequest)))
                 .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    void getUser_WhenAuthenticatedWithValidJwtToken_ShouldReturnUser() throws Exception {
-        User user = userRepository.save(
-                User.builder()
-                        .email("test@email.test")
-                        .password(passwordEncoder.encode("PasswordTest"))
-                        .name("maksim")
-                        .build()
-        );
-        String jwtToken = jwtProvider.generateToken(user.getEmail());
-
-        String responseContent = mockMvc.perform(get("/profile")
-                        .header("Authorization", "Bearer " + jwtToken))
-                .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
-
-        UserResponse foundUser = objectMapper.readValue(responseContent, UserResponse.class);
-
-        assertNotNull(foundUser);
-        assertEquals(foundUser.getEmail(), user.getEmail());
-        assertEquals(foundUser.getName(), user.getName());
-    }
-
-    @Test
-    void getUser_WhenAuthenticatedWithInvalidJwtToken_ShouldReturnUser() throws Exception {
-        userRepository.save(
-                User.builder()
-                        .email("test1@email.test")
-                        .password(passwordEncoder.encode("PasswordTest"))
-                        .name("maksim")
-                        .build()
-        );
-        String jwtToken = jwtProvider.generateToken("test2@email.test");
-
-        mockMvc.perform(get("/profile")
-                        .header("Authorization", "Bearer " + jwtToken))
-                .andExpect(status().isForbidden());
-    }
-
-    @Test
-    void getUser_WhenAuthenticatedWithExpiredJwtToken_ShouldReturnForbiddenStatus() throws Exception {
-        User user = userRepository.save(
-                User.builder()
-                        .email("test@email.test")
-                        .password(passwordEncoder.encode("PasswordTest"))
-                        .name("maksim")
-                        .build()
-        );
-        Date date = Date.from(LocalDate.now().minusDays(7).atStartOfDay(ZoneId.systemDefault()).toInstant());
-        String jwtToken = Jwts.builder()
-                .setSubject(user.getEmail())
-                .setExpiration(date)
-                .signWith(SignatureAlgorithm.HS512, jwtSecret)
-                .compact();
-
-        mockMvc.perform(get("/profile")
-                        .header("Authorization", "Bearer " + jwtToken))
-                .andExpect(status().isForbidden());
     }
 }

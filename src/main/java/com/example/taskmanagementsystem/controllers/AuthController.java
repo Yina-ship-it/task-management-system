@@ -56,16 +56,4 @@ public class AuthController {
             return ResponseEntity.badRequest().build();
         }
     }
-
-    @GetMapping("/profile")
-    public ResponseEntity<UserResponse> getUser() {
-        try {
-            UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            User user = userService.findByEmail(userDetails.getUsername());
-            UserResponse response = new UserResponse(user.getId(), user.getName(), user.getEmail());
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().build();
-        }
-    }
 }
