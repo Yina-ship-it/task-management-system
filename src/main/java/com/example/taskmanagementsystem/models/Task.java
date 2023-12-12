@@ -46,4 +46,7 @@ public class Task {
             joinColumns = @JoinColumn(name = "task_id"),
             inverseJoinColumns = @JoinColumn(name = "assignee_id"))
     private List<User> assignees = new ArrayList<>();
+
+    @OneToMany(mappedBy = "task")
+    private List<Comment> comments = new ArrayList<>();
 }

@@ -1,8 +1,7 @@
-package com.example.taskmanagementsystem.dto.task;
+package com.example.taskmanagementsystem.dto.comment;
 
 import com.example.taskmanagementsystem.dto.profile.UserResponse;
-import com.example.taskmanagementsystem.models.TaskPriority;
-import com.example.taskmanagementsystem.models.TaskStatus;
+import com.example.taskmanagementsystem.models.Task;
 import com.example.taskmanagementsystem.models.User;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
@@ -11,24 +10,20 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.time.LocalDateTime;
 
 /**
  * @author Yina-ship-it
- * @since 09.12.2023
+ * @since 13.12.2023
  */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 @JsonNaming(PropertyNamingStrategies.KebabCaseStrategy.class)
-public class TaskResponse {
+public class CommentResponse {
     private Long id;
-    private String title;
-    private String description;
-    private TaskStatus status;
-    private TaskPriority priority;
-    private UserResponse author;
-    private List<UserResponse> assignees = new ArrayList<>();
+    private String text;
+    private UserResponse commentator;
+    private LocalDateTime dateTime;
 }
