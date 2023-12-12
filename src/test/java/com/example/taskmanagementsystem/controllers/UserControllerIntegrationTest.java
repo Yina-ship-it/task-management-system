@@ -102,6 +102,7 @@ class UserControllerIntegrationTest {
                         .status(TaskStatus.IN_PROGRESS)
                         .author(users.get(0))
                         .assignees(new ArrayList<>(List.of(users.get(1), users.get(2))))
+                        .comments(new ArrayList<>())
                         .build(),
                 Task.builder()
                         .title("TestTask2")
@@ -110,6 +111,7 @@ class UserControllerIntegrationTest {
                         .status(TaskStatus.IN_PROGRESS)
                         .author(users.get(0))
                         .assignees(new ArrayList<>(List.of(users.get(2))))
+                        .comments(new ArrayList<>())
                         .build(),
                 Task.builder()
                         .title("TestTask3")
@@ -118,6 +120,7 @@ class UserControllerIntegrationTest {
                         .status(TaskStatus.PENDING)
                         .author(users.get(0))
                         .assignees(new ArrayList<>(List.of(users.get(0))))
+                        .comments(new ArrayList<>())
                         .build(),
                 Task.builder()
                         .title("TestTask4")
@@ -126,6 +129,7 @@ class UserControllerIntegrationTest {
                         .status(TaskStatus.IN_PROGRESS)
                         .author(users.get(2))
                         .assignees(new ArrayList<>(List.of(users.get(1), users.get(2))))
+                        .comments(new ArrayList<>())
                         .build(),
                 Task.builder()
                         .title("TestTask5")
@@ -134,6 +138,7 @@ class UserControllerIntegrationTest {
                         .status(TaskStatus.IN_PROGRESS)
                         .author(users.get(2))
                         .assignees(new ArrayList<>(List.of(users.get(1), users.get(0))))
+                        .comments(new ArrayList<>())
                         .build(),
                 Task.builder()
                         .title("TestTask6")
@@ -142,6 +147,7 @@ class UserControllerIntegrationTest {
                         .status(TaskStatus.PENDING)
                         .author(users.get(2))
                         .assignees(new ArrayList<>(List.of(users.get(0))))
+                        .comments(new ArrayList<>())
                         .build(),
                 Task.builder()
                         .title("TestTask7")
@@ -150,6 +156,7 @@ class UserControllerIntegrationTest {
                         .status(TaskStatus.COMPLETED)
                         .author(users.get(2))
                         .assignees(new ArrayList<>(List.of(users.get(2))))
+                        .comments(new ArrayList<>())
                         .build()
         ));
     }

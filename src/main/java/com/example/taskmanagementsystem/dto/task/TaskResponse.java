@@ -1,5 +1,6 @@
 package com.example.taskmanagementsystem.dto.task;
 
+import com.example.taskmanagementsystem.dto.comment.CommentResponse;
 import com.example.taskmanagementsystem.dto.user.UserResponse;
 import com.example.taskmanagementsystem.models.TaskPriority;
 import com.example.taskmanagementsystem.models.TaskStatus;
@@ -30,4 +31,5 @@ public class TaskResponse {
     private TaskPriority priority;
     private UserResponse author;
     private List<UserResponse> assignees = new ArrayList<>();
+    private List<CommentResponse> comments = new ArrayList<>();
 }

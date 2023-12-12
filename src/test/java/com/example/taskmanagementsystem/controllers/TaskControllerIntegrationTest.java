@@ -95,6 +95,7 @@ class TaskControllerIntegrationTest {
                         .status(TaskStatus.IN_PROGRESS)
                         .author(users.get(0))
                         .assignees(new ArrayList<>(List.of(users.get(1), users.get(2))))
+                        .comments(new ArrayList<>())
                         .build(),
                 Task.builder()
                         .title("TestTask2")
@@ -103,6 +104,7 @@ class TaskControllerIntegrationTest {
                         .status(TaskStatus.COMPLETED)
                         .author(users.get(1))
                         .assignees(new ArrayList<>(List.of(users.get(0), users.get(2))))
+                        .comments(new ArrayList<>())
                         .build()
         ));
     }
