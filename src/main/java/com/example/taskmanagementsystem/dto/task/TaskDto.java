@@ -1,9 +1,6 @@
 package com.example.taskmanagementsystem.dto.task;
 
-import com.example.taskmanagementsystem.models.Task;
-import com.example.taskmanagementsystem.models.TaskPriority;
-import com.example.taskmanagementsystem.models.TaskStatus;
-import com.example.taskmanagementsystem.models.User;
+import com.example.taskmanagementsystem.models.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -29,4 +26,5 @@ public class TaskDto {
     private TaskPriority priority;
     private User author;
     private List<User> assignees = new ArrayList<>();
+    private List<Comment> comments = new ArrayList<>();
 }

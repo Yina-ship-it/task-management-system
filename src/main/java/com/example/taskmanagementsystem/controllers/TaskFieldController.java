@@ -1,6 +1,9 @@
 package com.example.taskmanagementsystem.controllers;
 
-import com.example.taskmanagementsystem.dto.profile.UserResponse;
+import com.example.taskmanagementsystem.dto.comment.CommentDto;
+import com.example.taskmanagementsystem.dto.comment.CommentDtoConverter;
+import com.example.taskmanagementsystem.dto.comment.CommentResponse;
+import com.example.taskmanagementsystem.dto.user.UserResponse;
 import com.example.taskmanagementsystem.dto.task.TaskDto;
 import com.example.taskmanagementsystem.dto.task.TaskDtoConverter;
 import com.example.taskmanagementsystem.dto.task.TaskResponse;
@@ -38,6 +41,9 @@ public class TaskFieldController {
 
     @Autowired
     private TaskDtoConverter taskDtoConverter;
+
+    @Autowired
+        private CommentDtoConverter commentDtoConverter;
 
     @GetMapping("/id")
     public ResponseEntity<Map<String, Long>> getId(@PathVariable Long taskId) {
@@ -130,6 +136,26 @@ public class TaskFieldController {
             return ResponseEntity.badRequest().build();
     }
 
+    @GetMapping("/comments")
+    public ResponseEntity<Map<String, List<CommentResponse>>> getComments(@PathVariable Long taskId) {
+        return handleFieldRequest(taskId, "comments", TaskResponse::getComments);
+    }
+
+    @PostMapping("/comments")
+    public ResponseEntity<TaskResponse> addComment(@PathVariable Long taskId,
+                                                    @RequestParam(name = "comment-text") String commentText) {
+        CommentDto commentDto = commentDtoConverter.convertRequestToDto(commentText);
+        return handleUpdateTaskField(taskId, commentDto,
+                    (id, val, user) -> taskService.appendCommentInTask(id, val, user));
+    }
+
+    @DeleteMapping("/comments")
+    public ResponseEntity<TaskResponse> deleteComment(@PathVariable Long taskId,
+                                                   @RequestParam(name = "comment-id") Long commentId) {
+        return handleUpdateTaskField(taskId, commentId,
+                (id, val, user) -> taskService.removeCommentByIdInTask(id, val, user));
+    }
+
     private <T> ResponseEntity<Map<String, T>> handleFieldRequest(
             Long taskId,
             String key,
@@ -170,6 +196,7 @@ public class TaskFieldController {
             return ResponseEntity.badRequest().build();
         } catch (Exception e) {
             log.severe(e.getMessage());
+            System.out.println(e);
             return ResponseEntity.internalServerError().build();
         }
     }

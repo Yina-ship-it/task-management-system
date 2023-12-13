@@ -1,7 +1,7 @@
 package com.example.taskmanagementsystem.controllers;
 
-import com.example.taskmanagementsystem.dto.profile.UserResponse;
-import com.example.taskmanagementsystem.dto.profile.UserResponseConverter;
+import com.example.taskmanagementsystem.dto.user.UserResponse;
+import com.example.taskmanagementsystem.dto.user.UserResponseConverter;
 import com.example.taskmanagementsystem.dto.task.TaskDtoConverter;
 import com.example.taskmanagementsystem.dto.task.TaskResponse;
 import com.example.taskmanagementsystem.models.Task;
@@ -30,7 +30,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -103,6 +102,7 @@ class UserControllerIntegrationTest {
                         .status(TaskStatus.IN_PROGRESS)
                         .author(users.get(0))
                         .assignees(new ArrayList<>(List.of(users.get(1), users.get(2))))
+                        .comments(new ArrayList<>())
                         .build(),
                 Task.builder()
                         .title("TestTask2")
@@ -111,6 +111,7 @@ class UserControllerIntegrationTest {
                         .status(TaskStatus.IN_PROGRESS)
                         .author(users.get(0))
                         .assignees(new ArrayList<>(List.of(users.get(2))))
+                        .comments(new ArrayList<>())
                         .build(),
                 Task.builder()
                         .title("TestTask3")
@@ -119,6 +120,7 @@ class UserControllerIntegrationTest {
                         .status(TaskStatus.PENDING)
                         .author(users.get(0))
                         .assignees(new ArrayList<>(List.of(users.get(0))))
+                        .comments(new ArrayList<>())
                         .build(),
                 Task.builder()
                         .title("TestTask4")
@@ -127,6 +129,7 @@ class UserControllerIntegrationTest {
                         .status(TaskStatus.IN_PROGRESS)
                         .author(users.get(2))
                         .assignees(new ArrayList<>(List.of(users.get(1), users.get(2))))
+                        .comments(new ArrayList<>())
                         .build(),
                 Task.builder()
                         .title("TestTask5")
@@ -135,6 +138,7 @@ class UserControllerIntegrationTest {
                         .status(TaskStatus.IN_PROGRESS)
                         .author(users.get(2))
                         .assignees(new ArrayList<>(List.of(users.get(1), users.get(0))))
+                        .comments(new ArrayList<>())
                         .build(),
                 Task.builder()
                         .title("TestTask6")
@@ -143,6 +147,7 @@ class UserControllerIntegrationTest {
                         .status(TaskStatus.PENDING)
                         .author(users.get(2))
                         .assignees(new ArrayList<>(List.of(users.get(0))))
+                        .comments(new ArrayList<>())
                         .build(),
                 Task.builder()
                         .title("TestTask7")
@@ -151,6 +156,7 @@ class UserControllerIntegrationTest {
                         .status(TaskStatus.COMPLETED)
                         .author(users.get(2))
                         .assignees(new ArrayList<>(List.of(users.get(2))))
+                        .comments(new ArrayList<>())
                         .build()
         ));
     }

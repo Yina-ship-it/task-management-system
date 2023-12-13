@@ -1,12 +1,12 @@
 package com.example.taskmanagementsystem.services.impl;
 
+import com.example.taskmanagementsystem.dto.comment.CommentDto;
+import com.example.taskmanagementsystem.dto.comment.CommentDtoConverter;
 import com.example.taskmanagementsystem.dto.task.TaskDto;
 import com.example.taskmanagementsystem.dto.task.TaskDtoConverter;
-import com.example.taskmanagementsystem.models.Task;
-import com.example.taskmanagementsystem.models.TaskPriority;
-import com.example.taskmanagementsystem.models.TaskStatus;
-import com.example.taskmanagementsystem.models.User;
+import com.example.taskmanagementsystem.models.*;
 import com.example.taskmanagementsystem.repositories.TaskRepository;
+import com.example.taskmanagementsystem.services.CommentService;
 import com.example.taskmanagementsystem.services.TaskService;
 import com.example.taskmanagementsystem.services.UserService;
 import jakarta.persistence.EntityNotFoundException;
@@ -30,6 +30,12 @@ public class TaskServiceImpl implements TaskService {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private CommentService commentService;
+
+    @Autowired
+    private CommentDtoConverter commentDtoConverter;
 
     @Autowired
     private TaskDtoConverter taskDtoConverter;
@@ -62,7 +68,7 @@ public class TaskServiceImpl implements TaskService {
     public void deleteTaskById(Long id, User user) {
         Task task = getTaskById(id);
         validateAuthor(task, user);
-
+        task = commentService.deleteAllCommentsInTask(task);
         taskRepository.delete(task);
     }
 
@@ -155,6 +161,24 @@ public class TaskServiceImpl implements TaskService {
         if (!task.getAssignees().contains(assignee))
             task.getAssignees().add(assignee);
 
+        return taskDtoConverter.convertEntityToDto(taskRepository.save(task));
+    }
+
+    @Override
+    public TaskDto appendCommentInTask(Long taskId, CommentDto commentDto, User commentator) {
+        Task task = getTaskById(taskId);
+        commentDto.setCommentator(commentator);
+        commentDto.setTask(task);
+        task.getComments().add(commentDtoConverter.convertDtoToEntity(commentService.createComment(commentDto)));
+        return taskDtoConverter.convertEntityToDto(taskRepository.save(task));
+    }
+
+    @Override
+    public TaskDto removeCommentByIdInTask(Long taskId, Long commentId, User commentatorOrTaskAuthor) {
+        Task task = getTaskById(taskId);
+        Comment comment = commentDtoConverter.convertDtoToEntity(commentService.findCommentById(commentId));
+        commentService.deleteCommentById(commentId, commentatorOrTaskAuthor);
+        task.getComments().remove(comment);
         return taskDtoConverter.convertEntityToDto(taskRepository.save(task));
     }
 

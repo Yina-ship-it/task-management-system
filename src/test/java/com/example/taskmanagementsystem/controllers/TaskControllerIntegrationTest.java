@@ -3,10 +3,8 @@ package com.example.taskmanagementsystem.controllers;
 import com.example.taskmanagementsystem.dto.task.TaskDtoConverter;
 import com.example.taskmanagementsystem.dto.task.TaskRequest;
 import com.example.taskmanagementsystem.dto.task.TaskResponse;
-import com.example.taskmanagementsystem.models.Task;
-import com.example.taskmanagementsystem.models.TaskPriority;
-import com.example.taskmanagementsystem.models.TaskStatus;
-import com.example.taskmanagementsystem.models.User;
+import com.example.taskmanagementsystem.models.*;
+import com.example.taskmanagementsystem.repositories.CommentRepository;
 import com.example.taskmanagementsystem.repositories.TaskRepository;
 import com.example.taskmanagementsystem.repositories.UserRepository;
 import com.example.taskmanagementsystem.security.JwtProvider;
@@ -23,10 +21,12 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -49,6 +49,9 @@ class TaskControllerIntegrationTest {
     private TaskRepository taskRepository;
 
     @Autowired
+    private CommentRepository commentRepository;
+
+    @Autowired
     private TaskDtoConverter taskDtoConverter;
 
     @Autowired
@@ -66,6 +69,7 @@ class TaskControllerIntegrationTest {
     private String token;
     private List<User> users;
     private List<Task> tasks;
+    private List<Comment> comments;
     private TaskRequest taskRequest;
 
 
@@ -74,7 +78,53 @@ class TaskControllerIntegrationTest {
         this.users = createUsers();
         this.token = jwtProvider.generateToken(users.get(0).getEmail());
         this.tasks = createTasks();
+        comments = createComments();
+        for (Comment comment : comments) {
+            comment.getTask().getComments().add(comment);
+        }
+        comments = commentRepository.saveAll(comments);
         this.taskRequest = createTaskRequest();
+    }
+
+    private List<Comment> createComments() {
+        return commentRepository.saveAll(List.of(
+                Comment.builder()
+                        .task(tasks.get(0))
+                        .dateTime(LocalDateTime.now().plusMinutes(5))
+                        .commentator(users.get(0))
+                        .text("Comment 1")
+                        .build(),
+                Comment.builder()
+                        .task(tasks.get(0))
+                        .dateTime(LocalDateTime.now().plusMinutes(2))
+                        .commentator(users.get(1))
+                        .text("Comment 2")
+                        .build(),
+                Comment.builder()
+                        .task(tasks.get(0))
+                        .dateTime(LocalDateTime.now().plusMinutes(1))
+                        .commentator(users.get(2))
+                        .text("Comment 3")
+                        .build(),
+                Comment.builder()
+                        .task(tasks.get(1))
+                        .dateTime(LocalDateTime.now().plusMinutes(3))
+                        .commentator(users.get(2))
+                        .text("Comment 4")
+                        .build(),
+                Comment.builder()
+                        .task(tasks.get(1))
+                        .dateTime(LocalDateTime.now().plusMinutes(6))
+                        .commentator(users.get(1))
+                        .text("Comment 5")
+                        .build(),
+                Comment.builder()
+                        .task(tasks.get(1))
+                        .dateTime(LocalDateTime.now().plusMinutes(4))
+                        .commentator(users.get(0))
+                        .text("Comment 6")
+                        .build()
+        ));
     }
 
     private List<User> createUsers(){
@@ -95,6 +145,7 @@ class TaskControllerIntegrationTest {
                         .status(TaskStatus.IN_PROGRESS)
                         .author(users.get(0))
                         .assignees(new ArrayList<>(List.of(users.get(1), users.get(2))))
+                        .comments(new ArrayList<>())
                         .build(),
                 Task.builder()
                         .title("TestTask2")
@@ -103,6 +154,7 @@ class TaskControllerIntegrationTest {
                         .status(TaskStatus.COMPLETED)
                         .author(users.get(1))
                         .assignees(new ArrayList<>(List.of(users.get(0), users.get(2))))
+                        .comments(new ArrayList<>())
                         .build()
         ));
     }

@@ -1,4 +1,4 @@
-package com.example.taskmanagementsystem.dto.profile;
+package com.example.taskmanagementsystem.dto.user;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

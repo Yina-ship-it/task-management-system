@@ -1,12 +1,10 @@
 package com.example.taskmanagementsystem.controllers;
 
-import com.example.taskmanagementsystem.dto.profile.UserResponse;
+import com.example.taskmanagementsystem.dto.user.UserResponse;
 import com.example.taskmanagementsystem.dto.task.TaskDtoConverter;
 import com.example.taskmanagementsystem.dto.task.TaskResponse;
-import com.example.taskmanagementsystem.models.Task;
-import com.example.taskmanagementsystem.models.TaskPriority;
-import com.example.taskmanagementsystem.models.TaskStatus;
-import com.example.taskmanagementsystem.models.User;
+import com.example.taskmanagementsystem.models.*;
+import com.example.taskmanagementsystem.repositories.CommentRepository;
 import com.example.taskmanagementsystem.repositories.TaskRepository;
 import com.example.taskmanagementsystem.repositories.UserRepository;
 import com.example.taskmanagementsystem.security.JwtProvider;
@@ -23,12 +21,12 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
  * @author Yina-ship-it
@@ -53,6 +51,9 @@ class TaskFieldControllerIntegrationTest {
     private UserRepository userRepository;
 
     @Autowired
+    private CommentRepository commentRepository;
+
+    @Autowired
     private ObjectMapper objectMapper;
 
     @Autowired
@@ -64,6 +65,7 @@ class TaskFieldControllerIntegrationTest {
     private String token;
     private List<User> users;
     private List<Task> tasks;
+    private List<Comment> comments;
     private TaskResponse taskResponse;
 
     @BeforeEach
@@ -71,6 +73,11 @@ class TaskFieldControllerIntegrationTest {
         this.users = createUsers();
         this.token = jwtProvider.generateToken(users.get(0).getEmail());
         this.tasks = createTasks();
+        comments = createComments();
+        for (Comment comment : comments) {
+            comment.getTask().getComments().add(comment);
+        }
+        comments = commentRepository.saveAll(comments);
         this.taskResponse = createTaskResponse();
     }
 
@@ -84,6 +91,47 @@ class TaskFieldControllerIntegrationTest {
         ));
     }
 
+    private List<Comment> createComments() {
+        return commentRepository.saveAll(List.of(
+                Comment.builder()
+                        .task(tasks.get(0))
+                        .dateTime(LocalDateTime.now().plusMinutes(5))
+                        .commentator(users.get(0))
+                        .text("Comment 1")
+                        .build(),
+                Comment.builder()
+                        .task(tasks.get(0))
+                        .dateTime(LocalDateTime.now().plusMinutes(2))
+                        .commentator(users.get(1))
+                        .text("Comment 2")
+                        .build(),
+                Comment.builder()
+                        .task(tasks.get(0))
+                        .dateTime(LocalDateTime.now().plusMinutes(1))
+                        .commentator(users.get(2))
+                        .text("Comment 3")
+                        .build(),
+                Comment.builder()
+                        .task(tasks.get(1))
+                        .dateTime(LocalDateTime.now().plusMinutes(3))
+                        .commentator(users.get(2))
+                        .text("Comment 4")
+                        .build(),
+                Comment.builder()
+                        .task(tasks.get(1))
+                        .dateTime(LocalDateTime.now().plusMinutes(6))
+                        .commentator(users.get(1))
+                        .text("Comment 5")
+                        .build(),
+                Comment.builder()
+                        .task(tasks.get(1))
+                        .dateTime(LocalDateTime.now().plusMinutes(4))
+                        .commentator(users.get(0))
+                        .text("Comment 6")
+                        .build()
+        ));
+    }
+
     private List<Task> createTasks(){
         return taskRepository.saveAll(List.of(
                 Task.builder()
@@ -93,6 +141,7 @@ class TaskFieldControllerIntegrationTest {
                         .status(TaskStatus.IN_PROGRESS)
                         .author(users.get(0))
                         .assignees(new ArrayList<>(List.of(users.get(1), users.get(2))))
+                        .comments(new ArrayList<>())
                         .build(),
                 Task.builder()
                         .title("TestTask2")
@@ -101,6 +150,7 @@ class TaskFieldControllerIntegrationTest {
                         .status(TaskStatus.COMPLETED)
                         .author(users.get(1))
                         .assignees(new ArrayList<>(List.of(users.get(2))))
+                        .comments(new ArrayList<>())
                         .build()
         ));
     }
@@ -909,7 +959,7 @@ class TaskFieldControllerIntegrationTest {
     }
 
     @Test
-    void deleyeAssignee_WhenAssignIdInputAndDeleteAssigneeAnotherUserTask_ShouldReturnBadRequestStatus() throws Exception {
+    void deleteAssignee_WhenAssignIdInputAndDeleteAssigneeAnotherUserTask_ShouldReturnBadRequestStatus() throws Exception {
         // Arrange
         String assigneeId = users.get(2).getId().toString();
 
@@ -1036,6 +1086,169 @@ class TaskFieldControllerIntegrationTest {
         // Act
         mockMvc.perform(delete("/api/tasks/{id}/assignees", tasks.get(0).getId())
                         .param("assignee-email", assigneeEmail))
+                // Assert
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void addComment_WhenValidCommentTextInput_ShouldReturnOkStatusAndTaskResponseWithNewComment() throws Exception {
+        // Arrange
+        String commentText = "Valid comment";
+        int sizeBefore = tasks.get(1).getComments().size();
+
+        // Act
+        String responseContent = mockMvc.perform(post("/api/tasks/{id}/comments", tasks.get(1).getId())
+                        .header("Authorization", "Bearer " + token)
+                        .param("comment-text", commentText))
+                // Assert
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON)).andReturn().getResponse().getContentAsString();
+
+        // Assert
+        TaskResponse response = objectMapper.readValue(responseContent, TaskResponse.class);
+
+        assertNotNull(response);
+        assertEquals(sizeBefore + 1, response.getComments().size());
+        assertEquals(tasks.get(1).getId(), response.getId());
+    }
+
+    @Test
+    void addComment_WhenEmptyCommentTextInput_ShouldReturnBadRequestStatus() throws Exception {
+        // Arrange
+        String commentText = null;
+        int sizeBefore = tasks.get(1).getComments().size();
+
+        // Act
+        mockMvc.perform(post("/api/tasks/{id}/comments", tasks.get(1).getId())
+                        .header("Authorization", "Bearer " + token)
+                        .param("comment-text", commentText))
+                // Assert
+                .andExpect(status().isBadRequest());
+        // Assert
+        Optional<Task> task = taskRepository.findById(tasks.get(1).getId());
+
+        assertTrue(task.isPresent());
+        assertEquals(sizeBefore, task.get().getComments().size());
+    }
+
+    @Test
+    void addComment_WhenBlankCommentTextInput_ShouldReturnBadRequestStatus() throws Exception {
+        // Arrange
+        String commentText = "";
+        int sizeBefore = tasks.get(1).getComments().size();
+
+        // Act
+        mockMvc.perform(post("/api/tasks/{id}/comments", tasks.get(1).getId())
+                        .header("Authorization", "Bearer " + token)
+                        .param("comment-text", commentText))
+                // Assert
+                .andExpect(status().isBadRequest());
+        // Assert
+        Optional<Task> task = taskRepository.findById(tasks.get(1).getId());
+
+        assertTrue(task.isPresent());
+        assertEquals(sizeBefore, task.get().getComments().size());
+    }
+
+    @Test
+    void addComment_UnauthorisedRequest_ShouldReturnForbiddenStatus() throws Exception {
+        // Arrange
+        String commentText = "Valid comment";
+
+        // Act
+        mockMvc.perform(post("/api/tasks/{id}/comments", tasks.get(1).getId())
+                        .param("comment-text", commentText))
+                // Assert
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void deleteComment_WhenValidCommentIdInput_ShouldReturnOkStatusAndTaskResponseWithoutRemoteComment() throws Exception {
+        // Arrange
+        String commentId = String.valueOf(tasks.get(1).getComments().get(2).getId());
+        int sizeBefore = tasks.get(1).getComments().size();
+
+        // Act
+        String responseContent = mockMvc.perform(delete("/api/tasks/{id}/comments", tasks.get(1).getId())
+                        .header("Authorization", "Bearer " + token)
+                        .param("comment-id", commentId))
+                // Assert
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON)).andReturn().getResponse().getContentAsString();
+
+        // Assert
+        TaskResponse response = objectMapper.readValue(responseContent, TaskResponse.class);
+
+        assertNotNull(response);
+        assertEquals(sizeBefore - 1, response.getComments().size());
+        assertEquals(tasks.get(1).getId(), response.getId());
+    }
+
+    @Test
+    void deleteComment_WhenAnotherUserCommentIdInput_ShouldReturnBadRequestStatus() throws Exception {
+        // Arrange
+        String commentId = String.valueOf(tasks.get(1).getComments().get(1).getId());
+        int sizeBefore = tasks.get(1).getComments().size();
+
+        // Act
+        mockMvc.perform(delete("/api/tasks/{id}/comments", tasks.get(1).getId())
+                        .header("Authorization", "Bearer " + token)
+                        .param("comment-id", commentId))
+                // Assert
+                .andExpect(status().isBadRequest());
+        // Assert
+        Optional<Task> task = taskRepository.findById(tasks.get(1).getId());
+
+        assertTrue(task.isPresent());
+        assertEquals(sizeBefore, task.get().getComments().size());
+    }
+
+    @Test
+    void deleteComment_WhenEmptyCommentIdInput_ShouldReturnBadRequestStatus() throws Exception {
+        // Arrange
+        String commentId = null;
+        int sizeBefore = tasks.get(1).getComments().size();
+
+        // Act
+        mockMvc.perform(delete("/api/tasks/{id}/comments", tasks.get(1).getId())
+                        .header("Authorization", "Bearer " + token)
+                        .param("comment-id", commentId))
+                // Assert
+                .andExpect(status().isBadRequest());
+        // Assert
+        Optional<Task> task = taskRepository.findById(tasks.get(1).getId());
+
+        assertTrue(task.isPresent());
+        assertEquals(sizeBefore, task.get().getComments().size());
+    }
+
+    @Test
+    void deleteComment_WhenBlankCommentIdInput_ShouldReturnBadRequestStatus() throws Exception {
+        // Arrange
+        String commentId = "";
+        int sizeBefore = tasks.get(1).getComments().size();
+
+        // Act
+        mockMvc.perform(delete("/api/tasks/{id}/comments", tasks.get(1).getId())
+                        .header("Authorization", "Bearer " + token)
+                        .param("comment-id", commentId))
+                // Assert
+                .andExpect(status().isBadRequest());
+        // Assert
+        Optional<Task> task = taskRepository.findById(tasks.get(1).getId());
+
+        assertTrue(task.isPresent());
+        assertEquals(sizeBefore, task.get().getComments().size());
+    }
+
+    @Test
+    void deleteComment_WhenBlankCommentTextInput_ShouldReturnBadRequestStatus() throws Exception {
+        // Arrange
+        String commentId = String.valueOf(tasks.get(1).getComments().get(2).getId());
+
+        // Act
+        mockMvc.perform(delete("/api/tasks/{id}/comments", tasks.get(1).getId())
+                        .param("comment-id", commentId))
                 // Assert
                 .andExpect(status().isForbidden());
     }

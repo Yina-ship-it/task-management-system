@@ -7,6 +7,7 @@ import com.example.taskmanagementsystem.models.TaskPriority;
 import com.example.taskmanagementsystem.models.TaskStatus;
 import com.example.taskmanagementsystem.models.User;
 import com.example.taskmanagementsystem.repositories.TaskRepository;
+import com.example.taskmanagementsystem.services.CommentService;
 import com.example.taskmanagementsystem.services.UserService;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.Test;
@@ -35,6 +36,9 @@ class TaskServiceImplTest {
 
     @Mock
     UserService userService;
+
+    @Mock
+    CommentService commentService;
 
     @InjectMocks
     TaskServiceImpl taskService;
@@ -353,6 +357,7 @@ class TaskServiceImplTest {
                 .build();
 
         when(taskRepository.findById(id)).thenReturn(Optional.of(task));
+        when(commentService.deleteAllCommentsInTask(task)).thenReturn(task);
 
         // Act
         taskService.deleteTaskById(id, user1);

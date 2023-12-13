@@ -1,8 +1,9 @@
 package com.example.taskmanagementsystem.dto.task;
 
 import com.example.taskmanagementsystem.dto.DtoConverter;
-import com.example.taskmanagementsystem.dto.profile.UserResponse;
-import com.example.taskmanagementsystem.dto.profile.UserResponseConverter;
+import com.example.taskmanagementsystem.dto.comment.CommentDtoConverter;
+import com.example.taskmanagementsystem.dto.comment.CommentResponse;
+import com.example.taskmanagementsystem.dto.user.UserResponseConverter;
 import com.example.taskmanagementsystem.models.Task;
 import com.example.taskmanagementsystem.models.TaskPriority;
 import com.example.taskmanagementsystem.models.TaskStatus;
@@ -11,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -22,7 +24,10 @@ import java.util.stream.Collectors;
 public class TaskDtoConverter implements DtoConverter<Task, TaskDto, TaskRequest, TaskResponse> {
 
     @Autowired
-    UserResponseConverter userResponseConverter;
+    private UserResponseConverter userResponseConverter;
+
+    @Autowired
+    private CommentDtoConverter commentDtoConverter;
 
     @Override
     public TaskDto convertEntityToDto(Task task) {
@@ -34,6 +39,7 @@ public class TaskDtoConverter implements DtoConverter<Task, TaskDto, TaskRequest
                 .status(task.getStatus())
                 .author(task.getAuthor())
                 .assignees(new ArrayList<>(task.getAssignees()))
+                .comments(task.getComments())
                 .build();
     }
 
@@ -47,6 +53,7 @@ public class TaskDtoConverter implements DtoConverter<Task, TaskDto, TaskRequest
                 .status(taskDto.getStatus())
                 .author(taskDto.getAuthor())
                 .assignees(taskDto.getAssignees())
+                .comments(taskDto.getComments())
                 .build();
     }
 
@@ -74,11 +81,22 @@ public class TaskDtoConverter implements DtoConverter<Task, TaskDto, TaskRequest
                         TaskPriority.getByValue(taskRequest.getPriorityValue()) :
                         TaskPriority.LOW)
                 .assignees(assignees)
+                .comments(new ArrayList<>())
                 .build();
     }
 
     @Override
     public TaskResponse convertDtoToResponse(TaskDto taskDto) {
+        List<CommentResponse> comments = taskDto.getComments()
+                .stream()
+                .map(commentDtoConverter::convertEntityToDto)
+                .map(commentDtoConverter::convertDtoToResponse)
+                .collect(Collectors.toList());
+
+        if(comments.size() > 1)
+            comments.sort(Comparator.comparing(CommentResponse::getDateTime));
+
+
         return TaskResponse.builder()
                 .id(taskDto.getId())
                 .title(taskDto.getTitle())
@@ -90,6 +108,7 @@ public class TaskDtoConverter implements DtoConverter<Task, TaskDto, TaskRequest
                         .stream()
                         .map(userResponseConverter::convertUserToResponse)
                         .collect(Collectors.toList()))
+                .comments(comments)
                 .build();
     }
 
