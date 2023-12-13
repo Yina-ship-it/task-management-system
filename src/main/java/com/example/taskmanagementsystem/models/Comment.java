@@ -26,6 +26,7 @@ public class Comment {
     @Column(nullable = false)
     private String text;
 
+    @Column(nullable = false)
     private LocalDateTime dateTime;
 
 
@@ -36,4 +37,15 @@ public class Comment {
     @ManyToOne
     @JoinColumn(name = "task_id")
     private Task task;
+
+    @Override
+    public String toString() {
+        return "Comment{" +
+                "id=" + id +
+                ", text='" + text + '\'' +
+                ", dateTime=" + dateTime +
+                ", commentator=" + commentator +
+                ", taskId=" + task.getId() +
+                '}';
+    }
 }

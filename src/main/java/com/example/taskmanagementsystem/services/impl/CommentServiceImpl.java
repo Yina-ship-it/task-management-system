@@ -3,6 +3,7 @@ package com.example.taskmanagementsystem.services.impl;
 import com.example.taskmanagementsystem.dto.comment.CommentDto;
 import com.example.taskmanagementsystem.dto.comment.CommentDtoConverter;
 import com.example.taskmanagementsystem.models.Comment;
+import com.example.taskmanagementsystem.models.Task;
 import com.example.taskmanagementsystem.models.User;
 import com.example.taskmanagementsystem.repositories.CommentRepository;
 import com.example.taskmanagementsystem.services.CommentService;
@@ -47,6 +48,13 @@ public class CommentServiceImpl implements CommentService {
         Comment comment = getCommentById(id);
         validateCommentatorOrTaskAuthor(comment, commentatorOrTaskAuthor);
         commentRepository.delete(comment);
+    }
+
+    @Override
+    public Task deleteAllCommentsInTask(Task task) {
+        commentRepository.deleteAllByTask(task);
+        task.getComments().clear();
+        return task;
     }
 
     @Override

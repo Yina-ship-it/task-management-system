@@ -1,5 +1,6 @@
 package com.example.taskmanagementsystem.services;
 
+import com.example.taskmanagementsystem.dto.comment.CommentDto;
 import com.example.taskmanagementsystem.dto.task.TaskDto;
 import com.example.taskmanagementsystem.models.TaskPriority;
 import com.example.taskmanagementsystem.models.TaskStatus;
@@ -25,6 +26,8 @@ public interface TaskService {
     TaskDto removeAssigneeByEmailInTask(Long taskId, String assigneeEmail, User author);
     TaskDto appendAssigneeByIdInTask(Long taskId, Long assigneeId, User author);
     TaskDto appendAssigneeByEmailInTask(Long taskId, String assigneeEmail, User author);
+    TaskDto appendCommentInTask(Long taskId, CommentDto commentDto, User commentator);
+    TaskDto removeCommentByIdInTask(Long taskId, Long commentId, User commentatorOrTaskAuthor);
 
     List<TaskDto> findAllTasksByAuthor(User author);
     List<TaskDto> findAllTasksByAssignee(User assignee);

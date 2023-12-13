@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
  * @since 13.12.2023
  */
 @Component
-public class CommentDtoConverter implements DtoConverter<Comment, CommentDto, CommentRequest, CommentResponse> {
+public class CommentDtoConverter implements DtoConverter<Comment, CommentDto, String, CommentResponse> {
 
     @Autowired
     private UserResponseConverter userResponseConverter;
@@ -23,6 +23,7 @@ public class CommentDtoConverter implements DtoConverter<Comment, CommentDto, Co
                 .id(comment.getId())
                 .text(comment.getText())
                 .task(comment.getTask())
+                .dateTime(comment.getDateTime())
                 .commentator(comment.getCommentator())
                 .build();
     }
@@ -33,15 +34,15 @@ public class CommentDtoConverter implements DtoConverter<Comment, CommentDto, Co
                 .id(commentDto.getId())
                 .text(commentDto.getText())
                 .commentator(commentDto.getCommentator())
+                .dateTime(commentDto.getDateTime())
                 .task(commentDto.getTask())
                 .build();
     }
 
     @Override
-    public CommentDto convertRequestToDto(CommentRequest commentRequest) {
+    public CommentDto convertRequestToDto(String commentText) {
         return CommentDto.builder()
-                .text(getNonBlankString(commentRequest.getText()))
-                .task(Task.builder().id(commentRequest.getTaskId()).build())
+                .text(getNonBlankString(commentText))
                 .build();
     }
 
