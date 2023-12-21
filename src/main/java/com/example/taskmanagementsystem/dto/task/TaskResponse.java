@@ -6,6 +6,8 @@ import com.example.taskmanagementsystem.models.TaskPriority;
 import com.example.taskmanagementsystem.models.TaskStatus;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -24,12 +26,24 @@ import java.util.List;
 @Builder
 @JsonNaming(PropertyNamingStrategies.KebabCaseStrategy.class)
 public class TaskResponse {
+
+    @Schema(example = "1")
     private Long id;
+
+    @Size(max = 255)
+    @Schema(example = "Example task title")
     private String title;
+
+    @Schema(example = "Example task description")
     private String description;
+
     private TaskStatus status;
+
     private TaskPriority priority;
+
     private UserResponse author;
+
     private List<UserResponse> assignees = new ArrayList<>();
+
     private List<CommentResponse> comments = new ArrayList<>();
 }
