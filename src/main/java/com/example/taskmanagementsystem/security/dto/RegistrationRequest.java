@@ -18,14 +18,14 @@ import lombok.NoArgsConstructor;
 @Builder
 public class RegistrationRequest {
     @Size(max = 255)
-    @Schema(example = "user@mail.example")
+    @Schema(description = "User's email address", example = "user@mail.example")
     private String email;
 
     @Size(max = 255)
-    @Schema(example = "example password")
+    @Schema(description = "User's password", example = "ExamplePassword123")
     private String password;
 
     @Size(max = 255)
-    @Schema(example = "Example name")
+    @Schema(description = "User's name", example = "Maksim")
     private String name;
 }

@@ -18,10 +18,10 @@ import lombok.NoArgsConstructor;
 @Builder
 public class AuthRequest {
     @Size(max = 255)
-    @Schema(example = "Example name")
+    @Schema(description = "User's email address", example = "default_user@mail.test")
     private String email;
 
     @Size(max = 255)
-    @Schema(example = "user@mail.example")
+    @Schema(description = "User's password", example = "defoult-user-password")
     private String password;
 }
