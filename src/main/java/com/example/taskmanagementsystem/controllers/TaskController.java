@@ -16,6 +16,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.List;
 
 /**
@@ -61,41 +62,21 @@ public class TaskController {
     }
 
     @PostMapping("/")
-    public ResponseEntity<TaskResponse> addTask(@RequestBody TaskRequest taskRequest){
-        try{
-            UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            User user = userService.findByEmail(userDetails.getUsername());
-            TaskDto taskDto = taskDtoConverter.convertRequestToDto(taskRequest);
-            taskDto.setAuthor(user);
-            TaskResponse task = taskDtoConverter.convertDtoToResponse(taskService.createTask(taskDto));
-            URI location = new URI("/api/tasks/" + task.getId());
-            return ResponseEntity.created(location).body(task);
-        } catch (EntityNotFoundException e) {
-            log.severe(e.getMessage());
-            return ResponseEntity.notFound().build();
-        } catch (IllegalArgumentException e) {
-            log.severe(e.getMessage());
-            return ResponseEntity.badRequest().build();
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().build();
-        }
+    public ResponseEntity<TaskResponse> addTask(@RequestBody TaskRequest taskRequest) throws URISyntaxException {
+        UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User user = userService.findByEmail(userDetails.getUsername());
+        TaskDto taskDto = taskDtoConverter.convertRequestToDto(taskRequest);
+        taskDto.setAuthor(user);
+        TaskResponse task = taskDtoConverter.convertDtoToResponse(taskService.createTask(taskDto));
+        URI location = new URI("/api/tasks/" + task.getId());
+        return ResponseEntity.created(location).body(task);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTask(@PathVariable Long id){
-        try{
-            UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            User user = userService.findByEmail(userDetails.getUsername());
-            taskService.deleteTaskById(id, user);
-            return ResponseEntity.ok().build();
-        } catch (EntityNotFoundException e) {
-            log.severe(e.getMessage());
-            return ResponseEntity.notFound().build();
-        } catch (IllegalArgumentException e) {
-            log.severe(e.getMessage());
-            return ResponseEntity.badRequest().build();
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().build();
-        }
+        UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User user = userService.findByEmail(userDetails.getUsername());
+        taskService.deleteTaskById(id, user);
+        return ResponseEntity.ok().build();
     }
 }
