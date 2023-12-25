@@ -1,5 +1,6 @@
 package com.example.taskmanagementsystem.controllers;
 
+import com.example.taskmanagementsystem.dto.task.TaskProperty;
 import com.example.taskmanagementsystem.dto.user.UserResponse;
 import com.example.taskmanagementsystem.dto.task.TaskDtoConverter;
 import com.example.taskmanagementsystem.dto.task.TaskResponse;
@@ -546,7 +547,7 @@ class TaskFieldControllerIntegrationTest {
     void updateStatus_WhenValidStatusValueInput_ShouldReturnOkStatusAndTaskResponseWithNewStatus() throws Exception {
         // Arrange
         String statusValue = "3";
-        taskResponse.setStatus(TaskStatus.getByValue(Integer.parseInt(statusValue)));
+        taskResponse.setStatus(new TaskProperty(TaskStatus.getByValue(Integer.parseInt(statusValue))));
 
         // Act
         mockMvc.perform(put("/api/tasks/{id}/status", tasks.get(0).getId())
@@ -626,7 +627,7 @@ class TaskFieldControllerIntegrationTest {
     void updatePriority_WhenValidPriorityValueInput_ShouldReturnOkStatusAndTaskResponseWithNewPriority() throws Exception {
         // Arrange
         String priorityValue = "1";
-        taskResponse.setPriority(TaskPriority.getByValue(Integer.parseInt(priorityValue)));
+        taskResponse.setPriority(new TaskProperty(TaskPriority.getByValue(Integer.parseInt(priorityValue))));
 
         // Act
         mockMvc.perform(put("/api/tasks/{id}/priority", tasks.get(0).getId())
