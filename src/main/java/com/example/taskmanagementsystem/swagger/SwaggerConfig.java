@@ -13,6 +13,7 @@ import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.media.IntegerSchema;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.media.StringSchema;
+import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -45,8 +46,10 @@ public class SwaggerConfig {
                         .version("")
                         .description("jwt token from demo user: eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJkZWZhdWx0X3VzZXJAbWFpbC50ZXN0IiwiZXhwIjo0ODU4MTY3NjAwfQ.Ejkccdx_E8gaT0K-pweEMsUTxpj3NlHpi31L9x4YlkTU8UWXgUhWKzvz6QG9tvlYK4eDLOjJHiQqIPQWdWYFtQ\n")
                 )
+                .security(List.of(new SecurityRequirement().addList(securityScheme.getName())))
                 .components(new Components()
                         .addSecuritySchemes(securityScheme.getName(), securityScheme)
+
                         .addSchemas("idSchema", new Schema<Map<String, Object>>()
                                 .addProperty("id", new IntegerSchema().format("int64").example(1)))
                         .addSchemas("nameSchema", new Schema<Map<String, Object>>()
