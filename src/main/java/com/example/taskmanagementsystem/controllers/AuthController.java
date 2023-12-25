@@ -36,7 +36,7 @@ public class AuthController {
     @Autowired
     private JwtProvider jwtProvider;
 
-    @Operation(summary = "User registration", description = "Allows to register a user in the system")
+    @Operation(summary = "User registration.", description = "Allows to register a user in the system.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "User registered", content = @Content),
             @ApiResponse(responseCode = "400", description = "Invalid Input Data", content = @Content)
@@ -56,7 +56,7 @@ public class AuthController {
         }
     }
 
-    @Operation(summary = "User authorisation", description = "Allows to get a JWT authorisation token")
+    @Operation(summary = "User authorisation.", description = "Allows to get a JWT authorisation token.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Authorisation successful",
                     content = {@Content(mediaType = "application/json",
